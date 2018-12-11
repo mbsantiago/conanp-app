@@ -1,13 +1,14 @@
-import React from 'react';
-import AppComponent, { styles } from '../AppComponent';
-import { withStyles } from '@material-ui/core/styles';
+import React, { Component } from 'react';
+//import AppComponent, { styles } from '../AppComponent';
+//import { withStyles } from '@material-ui/core/styles';
 
 
-class GraphComponent extends AppComponent {
-  renderContent() {
+class GraphComponent extends Component {
+  render() {
     return <div> Graph </div>;
   }
 }
 
 
-export default withStyles(styles, { withTheme: true })(GraphComponent);
+export default GraphComponent;
+//export default withStyles(styles, { withTheme: true })(GraphComponent);

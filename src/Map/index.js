@@ -38,7 +38,7 @@ class AppMap extends Component {
     this.mapRef = createRef();
 
     this.state = {
-      viewport: props.viewport,
+      viewport: config.DEFAULT_VIEWPORT,
       shapes: [],
     };
   }
@@ -60,7 +60,7 @@ class AppMap extends Component {
 
   onViewportChanged = (viewport) => this.setState({viewport: viewport});
 
-  onClickReset = () => this.setState({viewport: this.props.viewport});
+  onClickReset = () => this.setState({viewport: config.DEFAULT_VIEWPORT});
 
   getPointColor = (id) => this.props.selectedPoints.has(id) ?
     config.SELECTED_POINT_COLOR :
@@ -265,7 +265,6 @@ class AppMap extends Component {
 
 // Enforcing prop types
 AppMap.propTypes = {
-  viewport: PropTypes.object.isRequired,
   selectedPoints: PropTypes.object.isRequired,
   points: PropTypes.array,
   shapes: PropTypes.array,

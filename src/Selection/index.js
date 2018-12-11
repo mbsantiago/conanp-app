@@ -1,7 +1,7 @@
-import React from 'react';
-import AppComponent, { styles } from '../AppComponent';
-import { withStyles } from '@material-ui/core/styles';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
+// Material UI imports
 import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
@@ -13,22 +13,8 @@ import GroupSelection from './groups';
 import FilterComponent from '../FilterComponent';
 
 
-// Material UI style classes
-const newStyles = theme => {
-  let originalStyle = styles(theme);
-  let newStyle = {};
-  return Object.assign(newStyle, originalStyle);
-};
-
-
-class SelectionComponent extends AppComponent {
-
-  constructor(props) {
-    super(props);
-
-    // Add selected tab to state of component
-    this.state['selectedTab'] = 0;
-  }
+class SelectionComponent extends Component {
+  state = {selectedTab: 0}
 
   handleChange = (event, value) => this.setState({ selectedTab: value });
 
@@ -89,7 +75,7 @@ class SelectionComponent extends AppComponent {
     return <div> Resumen </div>;
   }
 
-  renderContent() {
+  render() {
     // Main render method.
     const selectedTab = this.state.selectedTab;
 
@@ -121,4 +107,19 @@ class SelectionComponent extends AppComponent {
 }
 
 
-export default withStyles(newStyles, { withTheme: true })(SelectionComponent);
+// Prop types validation
+SelectionComponent.propTypes = {
+  groups: PropTypes.object.isRequired,
+  selectedGroup: PropTypes.string.isRequired,
+  selectGroup: PropTypes.func.isRequired,
+  changeGroupName: PropTypes.func.isRequired,
+  deleteGroup: PropTypes.func.isRequired,
+  newGroup: PropTypes.func.isRequired,
+  deleteAllGroups: PropTypes.func.isRequired,
+  changeManualSelection: PropTypes.func.isRequired,
+  changeFilters: PropTypes.func.isRequired,
+  pointColumnRanges: PropTypes.object,
+};
+
+
+export default SelectionComponent;

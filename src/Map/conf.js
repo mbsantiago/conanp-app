@@ -10,6 +10,11 @@ const POINT_WEIGHT = 1;
 const POINT_OPACITY = 0.8;
 const POINT_RADIUS = 3;
 
+const DEFAULT_VIEWPORT = {
+  center: [23.950464, -102.532867],
+  zoom: 6,
+};
+
 const BASE_LAYERS = [
   {
     name: "Cobertura de Suelo",
@@ -52,4 +57,5 @@ export {
   POINT_RADIUS,
   BASE_LAYERS,
   SHAPE_LAYERS,
+  DEFAULT_VIEWPORT,
 };

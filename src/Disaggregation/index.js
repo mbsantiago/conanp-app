@@ -1,17 +1,11 @@
-import React from 'react';
-import AppComponent, { styles } from '../AppComponent';
-import { withStyles } from '@material-ui/core/styles';
+import React, { Component } from 'react';
 
 
-class DisaggregationComponent extends AppComponent {
-
-  renderContent() {
-
+class DisaggregationComponent extends Component {
+  render() {
     return <div> Desagregación </div>;
-
   }
-
 }
 
 
-export default withStyles(styles, { withTheme: true })(DisaggregationComponent);
+export default DisaggregationComponent;

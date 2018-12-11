@@ -1,31 +1,18 @@
-import React from 'react';
-import AppComponent, { styles } from '../AppComponent';
-import { withStyles } from '@material-ui/core/styles';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
+// Material UI imports
 import FilterComponent from '../FilterComponent';
 import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 
-const newStyles = theme => {
-  let originalStyle = styles(theme);
 
-  let newStyle = {
-  };
-
-  return Object.assign(newStyle, originalStyle);
-};
-
-
-class Filter extends AppComponent {
-  constructor(props) {
-    super(props);
-    this.state['value'] = 0;
-    this.state['filters'] = {};
-  }
+class Filter extends Component {
+  state = {value: 0, filters: {}}
 
   handleChange = (event, value) => {
-    this.setState({ value });
+    this.setState({ value: value });
   };
 
   handleChangeIndex = index => {
@@ -46,7 +33,7 @@ class Filter extends AppComponent {
     );
   }
 
-  renderContent() {
+  render() {
     const value = this.state.value;
 
     return (
@@ -71,4 +58,12 @@ class Filter extends AppComponent {
 }
 
 
-export default withStyles(newStyles, { withTheme: true })(Filter);
+// Prop types validation
+Filter.propTypes = {
+  dataColumnRanges: PropTypes.object,
+  dataFilters: PropTypes.object.isRequired,
+  changeDataFilters: PropTypes.func.isRequired,
+};
+
+
+export default Filter;

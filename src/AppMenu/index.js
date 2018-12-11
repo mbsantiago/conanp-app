@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
+// Material UI imports
+import { withStyles } from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
 import AppBar from '@material-ui/core/AppBar';
 import Fade from '@material-ui/core/Fade';
@@ -11,11 +13,12 @@ import FullscreenIcon from '@material-ui/icons/Fullscreen';
 import FullscreenExitIcon from '@material-ui/icons/FullscreenExit';
 import Typography from '@material-ui/core/Typography';
 
+// Local imports
+import * as config from './config';
 
+
+// Material UI styling
 const styles = theme => ({
-  root: {
-    display: 'flex',
-  },
   button: {
     position: 'absolute',
   },
@@ -30,31 +33,32 @@ const styles = theme => ({
 });
 
 
-class AppComponent extends Component {
+class AppMenu extends Component {
 
-  state = {expanded: false}
+  state = {expanded: false, selectedChildren: null}
 
-  renderContent() {
-    // Main interfase for class. Any child must implement
-    // this method. This will render in the components page.
-    return null;
+  selectChildren(index) {
+    this.setState(state => ({
+      selectedChildren: state.selectedChildren === index ? null: index
+    }));
   }
 
   handleExpand() {
-    // Expand then component window to full width
+    // Expand then component window to full width.
     this.setState(state => ({ expanded: !state.expanded }));
   }
 
   getPaperStyle(){
-    // Set window width. Max if expanded, otherwise configuration.
+    // Set window width. Max if expanded, otherwise 
+    // use configuration default.
     let width = this.state.expanded ?
       '90vw':
-      this.props.config.contentWidth;
+      config.contentWidth;
 
     return {
       zIndex: 1,
-      top: this.props.config.contentTop,
-      left: this.props.config.contentLeft,
+      top: config.contentTop,
+      left: config.contentLeft,
       width: width,
     };
   }
@@ -62,8 +66,8 @@ class AppComponent extends Component {
   getButtonStyle() {
     // Buttons can be placed on the right or left hand side of the
     // window. This is set by the aligment option in the configuration.
-    let style = {top: this.props.top, zIndex: 0};
-    if (this.props.config.alignment === 'right') {
+    let style = {zIndex: 0};
+    if (config.alignment === 'right') {
       style['right'] = 0;
     } else {
       style['left'] = 0;
@@ -74,29 +78,32 @@ class AppComponent extends Component {
 
   renderContentContainer() {
     // Early exit if component not open.
-    if (!this.props.open) return null;
-
+    if (this.state.selectedChildren === null) return null;
     const { classes } = this.props;
-    const paperStyle = this.getPaperStyle();
 
     // Select icon for expansion/contraction button.
     const expansionIcon = this.state.expanded ?
       <FullscreenExitIcon color="inherit"/> :
       <FullscreenIcon color="inherit"/>;
 
+    // Only render selected children
+    const selectedChildren = this.props.children[this.state.selectedChildren];
+
+    // Render a window with Title and navigation bar and children
+    // content.
     return (
       <Fade in={true}>
         <Paper
           className={classes.content}
           elevation={1}
-          style={paperStyle}
+          style={this.getPaperStyle()}
         >
           {/* Bar with title and nav buttons */}
           <AppBar position='static'>
             <Toolbar>
               {/* Title */}
               <Typography variant="h6" color="inherit" className={classes.grow}>
-                {this.props.name}
+                {selectedChildren.key}
               </Typography>
 
               {/* Expand button */}
@@ -111,7 +118,7 @@ class AppComponent extends Component {
               {/* Closing button */}
               <Button
                 color="inherit"
-                onClick={() => this.props.handleClose()}
+                onClick={() => this.setState({selectedChildren: null})}
                 autoFocus
               >
                 <ClearIcon color="inherit"/>
@@ -120,28 +127,52 @@ class AppComponent extends Component {
             </Toolbar>
           </AppBar>
 
-          {/* Main content of component (Must be implemented by children classes) */}
-          {this.renderContent()}
+          {/* Main content of component */}
+          {selectedChildren}
         </Paper>
       </Fade>
     );
   }
 
-  render() {
+  renderButtons() {
     const { classes } = this.props;
 
+    // Choosing height at witch to draw buttons
+    const startAt = this.props.height * (config.startFromTop / 100);
+    const changeInTop = Math.max(this.props.height / 18, config.minSpacing);
+
+    // Generate a button for each children.
+    const buttons = this.props.children.map((children, index) => {
+      // Get base style
+      let style = this.getButtonStyle();
+
+      // Add height for rendering
+      style['top'] = startAt + index * changeInTop;
+
+      return (
+        <Button
+          key={children.key}
+          color='primary'
+          variant='contained'
+          style={style}
+          className={classes.button}
+          onClick={() => this.selectChildren(index)}
+        >
+          {/* Use key as button content */}
+          {children.key}
+        </Button>
+      );
+    });
+
+    return buttons;
+  }
+
+  render() {
     return (
       <div>
         {/* Button for opening/closing the component's window */}
-        <Button
-          style={this.getButtonStyle()}
-          variant="contained"
-          color="primary"
-          className={classes.button}
-          onClick={this.props.handleToggle}
-        >
-          {this.props.name}
-        </Button>
+        {this.renderButtons()}
+
         {/* Components Content */}
         {this.renderContentContainer()}
       </div>
@@ -149,19 +180,12 @@ class AppComponent extends Component {
   }
 }
 
-// Enforcing prop types
-AppComponent.propTypes = {
-  handleToggle: PropTypes.func.isRequired,
-  handleClose: PropTypes.func.isRequired,
-  config: PropTypes.object.isRequired,
-  top: PropTypes.string.isRequired,
-  shapes: PropTypes.array,
-  addPoint: PropTypes.func.isRequired,
-  open: PropTypes.bool.isRequired,
-  name: PropTypes.string.isRequired,
-  classes: PropTypes.obj
+// Prop types validation
+AppMenu.propTypes = {
+  classes: PropTypes.object,
+  height: PropTypes.number.isRequired,
+  children: PropTypes.array.isRequired,
 };
 
 
-export default AppComponent;
-export { styles };
+export default withStyles(styles, { withTheme: true})(AppMenu);

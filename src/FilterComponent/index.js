@@ -379,7 +379,7 @@ FilterComponent.propTypes = {
   disabled: PropTypes.bool,
   changeFilters: PropTypes.func.isRequired,
   filters: PropTypes.object.isRequired,
-  columnRanges: PropTypes.object.isRequired,
+  columnRanges: PropTypes.object,
 };
 
 

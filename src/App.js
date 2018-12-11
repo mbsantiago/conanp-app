@@ -1,15 +1,26 @@
 import React, { Component } from 'react';
-import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 
+// Material UI imports
+import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
+import CssBaseline from '@material-ui/core/CssBaseline';
+
+// Other imports
+import { ScaleLoader } from 'react-spinners';
+
+// Map component
 import AppMap from './Map';
+
+// App menu
+import AppMenu from './AppMenu';
+
+// Other app components
 import SelectionComponent from './Selection';
 import FilterComponent from './Filter';
 import AggregationComponent from './Aggregation';
 import DisaggregationComponent from './Disaggregation';
 import GraphComponent from './Graph';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import { ScaleLoader } from 'react-spinners';
 
+// Local imports
 import { load, uuidv4, filterData } from './utils';
 import * as config from './config';
 
@@ -277,17 +288,12 @@ class App extends Component {
       );
     }
 
-    // Dynamically adjust the height of buttons to size of window.
-    let baseTop = this.state.window.height * (config.COMPONENT_MIN_TOP / 100);
-    let changeInTop = Math.max(this.state.window.height / 18, 40);
-
     return (
       <MuiThemeProvider theme={theme}>
         <div className="App">
           <CssBaseline/>
           {loader}
           <AppMap
-            viewport={config.DEFAULT_VIEWPORT}
             points={this.state.points}
             selectedPoints={this.state.groups[this.state.selectedGroup].selection}
             addPoint={this.addPoint}
@@ -296,59 +302,50 @@ class App extends Component {
             handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Map'? '': 'Map'}))}
             handleClose={() => this.setState({selectedView: ''})}
           />
-          <SelectionComponent
-            config={config.COMPONENT_CONFIG}
-            name={'Seleccionar'}
-            top={baseTop}
-            groups={this.state.groups}
-            selectedGroup={this.state.selectedGroup}
-            selectGroup={(group) => this.setState({selectedGroup: group, manualSelection: true})}
-            changeGroupName={(group, name) => this.changeGroupName(group, name)}
-            newGroup={() => this.newGroup()}
-            deleteGroup={(group) => this.deleteGroup(group)}
-            deleteAllGroups={() => this.deleteAllGroups()}
-            changeManualSelection={() => this.changeManualSelection()}
-            pointColumnRanges={this.state.pointColumnRanges}
-            changeFilters={(group, filters) => this.changeFilters(group, filters)}
-            open={this.state.selectedView === 'Selection'}
-            handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Selection'? '': 'Selection'}))}
-            handleClose={() => this.setState({selectedView: ''})}
-          />
-          <FilterComponent
-            config={config.COMPONENT_CONFIG}
-            name={'Filtrar'}
-            top={baseTop + changeInTop}
-            dataColumnRanges={this.state.dataColumnRanges}
-            dataFilters={this.state.dataFilters}
-            changeDataFilters={(filters) => this.changeDataFilters(filters)}
-            open={this.state.selectedView === 'Filter'}
-            handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Filter'? '': 'Filter'}))}
-            handleClose={() => this.setState({selectedView: ''})}
-          />
-          <AggregationComponent
-            config={config.COMPONENT_CONFIG}
-            name={'Agregar'}
-            top={baseTop + 2 * changeInTop}
-            open={this.state.selectedView === 'Aggregation'}
-            handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Aggregation'? '': 'Aggregation'}))}
-            handleClose={() => this.setState({selectedView: ''})}
-          />
-          <DisaggregationComponent
-            config={config.COMPONENT_CONFIG}
-            name={'Desaggregar'}
-            top={baseTop + 3 * changeInTop}
-            open={this.state.selectedView === 'Disggregation'}
-            handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Disggregation'? '': 'Disggregation'}))}
-            handleClose={() => this.setState({selectedView: ''})}
-          />
-          <GraphComponent
-            config={config.COMPONENT_CONFIG}
-            name={'Graficar'}
-            top={baseTop + 4 * changeInTop}
-            open={this.state.selectedView === 'Graph'}
-            handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Graph'? '': 'Graph'}))}
-            handleClose={() => this.setState({selectedView: ''})}
-          />
+          <AppMenu
+            height={this.state.window.height}
+          >
+            <SelectionComponent
+              key={'Seleccionar'}
+              groups={this.state.groups}
+              selectedGroup={this.state.selectedGroup}
+              selectGroup={(group) => this.setState({selectedGroup: group, manualSelection: true})}
+              changeGroupName={(group, name) => this.changeGroupName(group, name)}
+              newGroup={() => this.newGroup()}
+              deleteGroup={(group) => this.deleteGroup(group)}
+              deleteAllGroups={() => this.deleteAllGroups()}
+              changeManualSelection={() => this.changeManualSelection()}
+              pointColumnRanges={this.state.pointColumnRanges}
+              changeFilters={(group, filters) => this.changeFilters(group, filters)}
+              open={this.state.selectedView === 'Selection'}
+              handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Selection'? '': 'Selection'}))}
+              handleClose={() => this.setState({selectedView: ''})}
+            />
+            <FilterComponent
+              key={'Filtrar'}
+              dataColumnRanges={this.state.dataColumnRanges}
+              dataFilters={this.state.dataFilters}
+              changeDataFilters={(filters) => this.changeDataFilters(filters)}
+              open={this.state.selectedView === 'Filter'}
+              handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Filter'? '': 'Filter'}))}
+              handleClose={() => this.setState({selectedView: ''})}
+            />
+            <AggregationComponent
+              key={'Agregar'}
+              handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Aggregation'? '': 'Aggregation'}))}
+              handleClose={() => this.setState({selectedView: ''})}
+            />
+            <DisaggregationComponent
+              key={'Desagregar'}
+              handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Disggregation'? '': 'Disggregation'}))}
+              handleClose={() => this.setState({selectedView: ''})}
+            />
+            <GraphComponent
+              key={'Graficar'}
+              handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Graph'? '': 'Graph'}))}
+              handleClose={() => this.setState({selectedView: ''})}
+            />
+          </AppMenu>
         </div>
       </MuiThemeProvider>
     );
