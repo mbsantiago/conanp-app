@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 
 import Button from '@material-ui/core/Button';
@@ -196,7 +197,20 @@ class GroupSelection extends Component {
       </div>
     );
   }
-
 }
+
+
+// Enforcing prop types
+GroupSelection.propTypes = {
+  selectGroup: PropTypes.func.isRequired,
+  changeGroupName: PropTypes.func.isRequired,
+  deleteGroup: PropTypes.func.isRequired,
+  newGroup: PropTypes.func.isRequired,
+  deleteAllGroups: PropTypes.func.isRequired,
+  selectedGroup: PropTypes.string.isRequired,
+  classes: PropTypes.object,
+  groups: PropTypes.object,
+};
+
 
 export default withStyles(styles, { withTheme: true })(GroupSelection);

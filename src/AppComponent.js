@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
 import Toolbar from '@material-ui/core/Toolbar';
 import AppBar from '@material-ui/core/AppBar';
@@ -44,7 +45,7 @@ class AppComponent extends Component {
     this.setState(state => ({ expanded: !state.expanded }));
   }
 
-  getPaperStyle() {
+  getPaperStyle(){
     // Set window width. Max if expanded, otherwise configuration.
     let width = this.state.expanded ?
       '90vw':
@@ -137,7 +138,7 @@ class AppComponent extends Component {
           variant="contained"
           color="primary"
           className={classes.button}
-          onClick={() => this.props.handleToggle()}
+          onClick={this.props.handleToggle}
         >
           {this.props.name}
         </Button>
@@ -147,6 +148,19 @@ class AppComponent extends Component {
     );
   }
 }
+
+// Enforcing prop types
+AppComponent.propTypes = {
+  handleToggle: PropTypes.func.isRequired,
+  handleClose: PropTypes.func.isRequired,
+  config: PropTypes.object.isRequired,
+  top: PropTypes.string.isRequired,
+  shapes: PropTypes.array,
+  addPoint: PropTypes.func.isRequired,
+  open: PropTypes.bool.isRequired,
+  name: PropTypes.string.isRequired,
+  classes: PropTypes.obj
+};
 
 
 export default AppComponent;

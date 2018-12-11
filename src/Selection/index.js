@@ -46,7 +46,7 @@ class SelectionComponent extends AppComponent {
         newGroup={this.props.newGroup}
         deleteAllGroups={this.props.deleteAllGroups}
       />
-    )
+    );
   }
 
   renderFilters() {
@@ -59,16 +59,16 @@ class SelectionComponent extends AppComponent {
         {/* Row for switch to select if manual selection is active */}
         <ListItem>
           <FormGroup row>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={manualSelection}
-                onChange={this.props.changeManualSelection}
-                value="checkedA"
-              />
-            }
-            label="Selección Manual"
-          />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={manualSelection}
+                  onChange={this.props.changeManualSelection}
+                  value="checkedA"
+                />
+              }
+              label="Selección Manual"
+            />
           </FormGroup>
         </ListItem>
 

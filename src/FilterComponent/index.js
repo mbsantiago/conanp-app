@@ -139,7 +139,7 @@ class FilterComponent extends Component {
 
   handleChange = () => event => this.setState({[event.target.name]: event.target.value});
 
-  handleConfigureFilter = () => this.setState({ configureFilterWindowOpen: false, selectedFilter: null });
+  handleConfigureFilter = () => this.setState({configureFilterWindowOpen: false, selectedFilter: null});
 
   changeFilter(config) {
     // Copy filter object and update the selected filter configurations.
@@ -221,7 +221,7 @@ class FilterComponent extends Component {
       ));
     } else {
       // Otherwise show loading status
-      suggestions = <MenuItem value={'cargando'}>Cargando...</MenuItem>;;
+      suggestions = <MenuItem value={'cargando'}>Cargando...</MenuItem>;
     }
 
     // Render a popup window showing the posible columns with which to filter.
@@ -262,7 +262,7 @@ class FilterComponent extends Component {
           <Button onClick={this.handleAddFilter} color="primary">
             Añadir
           </Button>
-          </DialogActions>
+        </DialogActions>
       </Dialog>
     );
   }
@@ -341,7 +341,7 @@ class FilterComponent extends Component {
           </Button>
         </DialogActions>
       </Dialog>
-    )
+    );
   }
 
   render() {

@@ -48,7 +48,7 @@ class AppMap extends Component {
         let loaded_shape = Object.assign({data: data}, shape);
         state.shapes.push(loaded_shape);
 
-        return state
+        return state;
       }));
     });
   }
@@ -235,7 +235,7 @@ class AppMap extends Component {
       height: '100%',
       width: '100%',
       zIndex: 0,
-    }
+    };
 
     // Render a Leaflet Map with Controls, Home Button and Base Layer.
     return (
@@ -264,7 +264,8 @@ AppMap.propTypes = {
   selectedPoints: PropTypes.object.isRequired,
   points: PropTypes.array,
   shapes: PropTypes.array,
-  addPoint: PropTypes.func.isRequired
+  addPoint: PropTypes.func.isRequired,
+  removePoint: PropTypes.func.isRequired,
 };
 
 

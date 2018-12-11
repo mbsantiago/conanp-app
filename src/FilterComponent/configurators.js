@@ -59,7 +59,7 @@ class Configurator extends Component {
 
   deleteFilter = (index) => {
     let filters = this.props.filters.slice();
-    filters.splice(index, 1)
+    filters.splice(index, 1);
     this.props.changeFilter(filters);
   }
 
@@ -80,10 +80,10 @@ class Configurator extends Component {
           <FormControlLabel
             control={
               <Switch
-              checked={this.props.exclusion}
-              onChange={this.props.changeExclusion}
-              value="checkedA"
-            />
+                checked={this.props.exclusion}
+                onChange={this.props.changeExclusion}
+                value="checkedA"
+              />
             }
             label={this.props.exclusion? 'exclusion': 'inclusion'}
           />
@@ -152,7 +152,7 @@ class Configurator extends Component {
         aria-labelledby="form-dialog-title"
         fullWidth={true}
         maxWidth="sm"
-        classes={{ paperScrollPaper: classes.root }}
+        classes={{paperScrollPaper: classes.root}}
       >
         <DialogTitle id="form-dialog-title">Nuevo {this.header}</DialogTitle>
         <DialogContent className={classes.root}>
@@ -168,7 +168,7 @@ class Configurator extends Component {
         </DialogActions>
       </Dialog>
     );
-}
+  }
 
 
   render() {
@@ -179,8 +179,8 @@ class Configurator extends Component {
         <List className={classes.fullWidth} dense>
           {this.renderHeader()}
           {this.renderFilterList()}
-        <Divider/>
-        {this.renderAddFilterWindow()}
+          <Divider/>
+          {this.renderAddFilterWindow()}
         </List>
       </div>
     );
@@ -300,8 +300,8 @@ class RangeConfigurator extends Configurator {
 }
 
 
-CategoricalConfigurator = withStyles(styles, { withTheme: true})(CategoricalConfigurator)
-RangeConfigurator = withStyles(styles, { withTheme: true })(RangeConfigurator)
+CategoricalConfigurator = withStyles(styles, { withTheme: true})(CategoricalConfigurator);
+RangeConfigurator = withStyles(styles, { withTheme: true })(RangeConfigurator);
 
 
 export {

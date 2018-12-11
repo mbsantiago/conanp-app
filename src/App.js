@@ -51,7 +51,7 @@ class App extends Component {
     this.data = {};
 
     // Holder of filtered point data.
-    this.filteredData = []
+    this.filteredData = [];
   }
 
   componentDidMount() {
@@ -97,7 +97,7 @@ class App extends Component {
       let selection = state.groups[state.selectedGroup].selection;
       ids.forEach(id => selection.add(id));
       state.loading = loading;
-      return state
+      return state;
     });
   }
 
@@ -110,7 +110,7 @@ class App extends Component {
   }
 
   changeGroupName(group, name) {
-    this.setState(state => {state.groups[group].name = name;})
+    this.setState(state => {state.groups[group].name = name;});
   }
 
   deleteGroup(group) {
@@ -124,8 +124,8 @@ class App extends Component {
       // If selected group was just deleted, change it.
       if (group === state.selectedGroup) state.selectedGroup = Object.keys(state.groups)[0];
 
-      return state
-    })
+      return state;
+    });
   }
 
   loadDataFromPoints(ids) {
@@ -149,8 +149,9 @@ class App extends Component {
 
             // Remove point id from loading set.
             this.loadingPoints.delete(id);
-        }).then(() => this.checkLoading());
-    }});
+          }).then(() => this.checkLoading());
+      }
+    });
 
     return loading;
   }
@@ -175,7 +176,7 @@ class App extends Component {
 
   changeDataFilters(filters) {
     // Filter data for all groups
-    let filteredData = {}
+    let filteredData = {};
 
     // Filter data for each group
     for (let group in this.state.groups) {
@@ -184,7 +185,7 @@ class App extends Component {
 
       // Collect all data from each selected point.
       let data = [];
-      selection.forEach((id) => { data = data.concat(this.data[id]) });
+      selection.forEach((id) => { data = data.concat(this.data[id]); });
 
       // Filter selected data
       filteredData[group] = filterData(data, filters, this.state.dataMapping);
@@ -195,7 +196,7 @@ class App extends Component {
 
     // Change state to update selected data filters
     this.setState({dataFilters: filters});
-    console.log(this.filteredData);
+    //console.log(this.filteredData);
   }
 
   deleteAllGroups() {
@@ -236,7 +237,7 @@ class App extends Component {
     this.setState(state => {
       // Create new group and add to group info.
       let [, newGroupInfo] = this.makeNewGroupInfo();
-      state.groups = Object.assign(state.groups, newGroupInfo)
+      state.groups = Object.assign(state.groups, newGroupInfo);
       return state;
     });
   }
@@ -267,7 +268,8 @@ class App extends Component {
         top: 10,
         left: 50,
         zIndex: 999
-      }
+      };
+
       loader = (
         <div style={style}>
           <ScaleLoader/>

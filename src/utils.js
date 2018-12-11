@@ -53,7 +53,7 @@ function filterData(data, filters, mappings) {
         if (columnValue in mappings.mapping) {
           value = mappings.mapping[columnValue][filter.column];
         } else {
-          value = ''
+          value = '';
         }
       } else {
         value = datum[filter.column];
@@ -116,7 +116,7 @@ function filterData(data, filters, mappings) {
       }
     }
 
-    return selected
+    return selected;
   });
 
   return filteredData;
