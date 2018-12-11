@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
-import { uuidv4 } from '../utils';
 
+// Material UI imports
+import { withStyles } from '@material-ui/core/styles';
 import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -18,14 +18,16 @@ import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import CreateButton from '@material-ui/icons/Create';
 import RemoveButton from '@material-ui/icons/Remove';
 import Typography from '@material-ui/core/Typography';
-
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 
+// Local imports
+import { uuidv4 } from '../utils';
 import { CategoricalConfigurator, RangeConfigurator } from './configurators';
 
+// Material UI styles
 const styles = theme => ({
   groupFilter: {
     ...theme.mixins.gutters(),
@@ -51,25 +53,28 @@ const styles = theme => ({
   }
 });
 
-class FilterComponent extends Component {
-  constructor(props) {
-    super(props);
 
-    this.state = {
-      newFilterWindowOpen: false,
-      configureFilterWindowOpen: false,
-      column: '',
-      selectedFilter: null,
-    };
-  }
+class FilterComponent extends Component {
+
+  state = {
+    newFilterWindowOpen: false,
+    configureFilterWindowOpen: false,
+    column: '',
+    selectedFilter: null,
+  };
 
   renderHeader() {
     const { classes } = this.props;
 
     return (
       <>
+        {/* Row with title and add/delete filter buttons */}
         <ListItem>
+
+          {/* Title */}
           <ListItemText primary="Filtros" />
+
+          {/* Add new filter button */}
           <Button
             variant="text"
             color="primary"
@@ -80,6 +85,8 @@ class FilterComponent extends Component {
           >
             <AddIcon className={classes.extendedIcon}/>
           </Button>
+
+          {/* Delete all filters button */}
           <Button
             variant="text"
             color="secondary"
@@ -97,53 +104,14 @@ class FilterComponent extends Component {
   }
 
   deleteFilter(filterName) {
+    // Make copy of filter object, delete filter and pass it to changing
+    // filter function.
     let filters = Object.assign({}, this.props.filters);
     delete filters[filterName];
     this.props.changeFilters(filters);
   }
 
-  renderFilterList() {
-    const { classes } = this.props;
-
-    let filters = Object.entries(this.props.filters).map((entry) => {
-      let [filterName, filter] = entry;
-
-      return (
-        <ListItem
-          key={filter.column}
-          divider={true}
-          dense
-          button
-        >
-          <ListItemText primary={filter.column}/>
-          <ListItemSecondaryAction>
-            <IconButton
-              onClick={() => this.setState({selectedFilter: filterName, configureFilterWindowOpen: true})}
-              aria-label="Edit"
-            >
-              <CreateButton />
-            </IconButton>
-            <IconButton
-              onClick={() => this.deleteFilter(filterName)}
-              aria-label="Delete"
-            >
-              <RemoveButton />
-            </IconButton>
-          </ListItemSecondaryAction>
-        </ListItem>
-      );
-    });
-
-    return (
-      <ListItem>
-        <List className={classes.filterList}>
-          {filters}
-       </List>
-      </ListItem>
-    );
-  }
-
-  handleAddFilter() {
+  handleAddFilter = () => {
     if (this.state.column === '' || this.state.column === 'cargando') {
       return null;
     }
@@ -167,37 +135,96 @@ class FilterComponent extends Component {
     });
   }
 
-  handleCloseWindow(windowName) {
-    this.setState({[windowName + 'WindowOpen']: false});
+  handleCloseWindow = (windowName) => this.setState({[windowName + 'WindowOpen']: false});
+
+  handleChange = () => event => this.setState({[event.target.name]: event.target.value});
+
+  handleConfigureFilter = () => this.setState({ configureFilterWindowOpen: false, selectedFilter: null });
+
+  changeFilter(config) {
+    // Copy filter object and update the selected filter configurations.
+    let filters = Object.assign({}, this.props.filters);
+    filters[this.state.selectedFilter].filters = config;
+
+    // Pass the new filter configuration to the change filter function.
+    this.props.changeFilters(filters);
   }
 
-  handleChange() {
-    return event => {
-      this.setState({
-        [event.target.name]: event.target.value,
-      });
-    };
-  };
+  changeExclusion() {
+    // Copy filters object and update exclusion configuration.
+    let filters = Object.assign({}, this.props.filters);
+    let previousValue = filters[this.state.selectedFilter].exclusion;
+    filters[this.state.selectedFilter].exclusion = !previousValue;
 
-  handleConfigureFilter() {
-    this.setState({
-      configureFilterWindowOpen: false,
-      selectedFilter: null,
+    // Pass the new filter configuration to the change filter function.
+    this.props.changeFilters(filters);
+  }
+
+  renderFilterList() {
+    const { classes } = this.props;
+
+    // Make a JSX List item element for each filter.
+    let filters = Object.entries(this.props.filters).map((entry) => {
+      let [filterName, filter] = entry;
+
+      // Return a new list item row
+      return (
+        <ListItem
+          key={filter.column}
+          divider={true}
+          dense
+          button
+        >
+          {/* Name of column as primary identifyer of filter */}
+          <ListItemText primary={filter.column}/>
+
+          {/* Edit filter button */}
+          <ListItemSecondaryAction>
+            <IconButton
+              onClick={() => this.setState({selectedFilter: filterName, configureFilterWindowOpen: true})}
+              aria-label="Edit"
+            >
+              <CreateButton />
+            </IconButton>
+
+            {/* Delete filter button*/}
+            <IconButton
+              onClick={() => this.deleteFilter(filterName)}
+              aria-label="Delete"
+            >
+              <RemoveButton />
+            </IconButton>
+          </ListItemSecondaryAction>
+        </ListItem>
+      );
     });
+
+    // Return the full list of filters
+    return (
+      <ListItem>
+        <List className={classes.filterList}>
+          {filters}
+        </List>
+      </ListItem>
+    );
   }
 
   renderAddFilterWindow() {
     const { classes } = this.props;
-    let suggestions;
 
+    let suggestions;
+    // Render suggestions in column ranges where correctly loaded
     if (this.props.columnRanges) {
+      // Create a menu item for each posible data column
       suggestions = Object.keys(this.props.columnRanges).map(name => (
         <MenuItem value={name} key={name}>{name}</MenuItem>
       ));
     } else {
+      // Otherwise show loading status
       suggestions = <MenuItem value={'cargando'}>Cargando...</MenuItem>;;
     }
 
+    // Render a popup window showing the posible columns with which to filter.
     return (
       <Dialog
         open={this.state.newFilterWindowOpen}
@@ -206,8 +233,11 @@ class FilterComponent extends Component {
         fullWidth={true}
         maxWidth="sm"
       >
+        {/* Title */}
         <DialogTitle id="form-dialog-title">Nuevo Filtro</DialogTitle>
+
         <DialogContent>
+          {/* Add a form with a dropdown menu with all possible columns */}
           <form className={classes.form} autoComplete="off">
             <FormControl className={classes.formControl + ' ' + classes.fullWidth}>
               <InputLabel htmlFor="column">Columna</InputLabel>
@@ -221,46 +251,35 @@ class FilterComponent extends Component {
             </FormControl>
           </form>
         </DialogContent>
+
+        {/* Add button to finalize or cancel the creation of a new filter */}
         <DialogActions>
-        <Button onClick={() => this.handleCloseWindow('newFilter')} color="primary">
-          Cancelar
-        </Button>
-        <Button onClick={() => this.handleAddFilter()} color="primary">
-          Añadir
-        </Button>
-        </DialogActions>
+          {/* Cancel button */}
+          <Button onClick={() => this.handleCloseWindow('newFilter')} color="primary">
+            Cancelar
+          </Button>
+          {/* Add filter button */}
+          <Button onClick={this.handleAddFilter} color="primary">
+            Añadir
+          </Button>
+          </DialogActions>
       </Dialog>
     );
   }
 
-  changeFilter(config) {
-    let filters = Object.assign({}, this.props.filters);
-    filters[this.state.selectedFilter].filters = config;
-    this.props.changeFilters(filters);
-  }
-
-  changeExclusion() {
-    let filters = Object.assign({}, this.props.filters);
-    let previousValue = filters[this.state.selectedFilter].exclusion;
-    filters[this.state.selectedFilter].exclusion = !previousValue;
-    this.props.changeFilters(filters);
-  }
-
   renderConfigureFilterWindow() {
-    let content;
-    if (!this.state.selectedFilter) return null;
+    // Exit early if no filters exist or none have been selected
     if (Object.keys(this.props.filters).length === 0) return null;
+    if (!this.state.selectedFilter) return null;
 
+    // Extract information for the selected column
     const filter = this.props.filters[this.state.selectedFilter];
-    const column = filter.column;
-    const columnInfo = this.props.columnRanges[column];
-    const title = (
-      <Typography variant="button" gutterBottom>
-        {column}
-      </Typography>
-    );
+    const columnInfo = this.props.columnRanges[filter.column];
 
+    // Set content depending on the type of data column (categorical/continuous)
+    let content;
     if (filter.type === 'categorical') {
+      // Configuration of categorical column filters is done by specialized component
       content = (
         <CategoricalConfigurator
           values={columnInfo}
@@ -271,6 +290,7 @@ class FilterComponent extends Component {
         />
       );
     } else {
+      // The same for continuous column filters.
       content = (
         <RangeConfigurator
           values={columnInfo}
@@ -282,6 +302,14 @@ class FilterComponent extends Component {
       );
     }
 
+    // Render column filter being configured
+    const title = (
+      <Typography variant="button" gutterBottom>
+        {filter.column}
+      </Typography>
+    );
+
+    // Render a popup window with filter configuration options.
     return (
       <Dialog
         open={this.state.configureFilterWindowOpen}
@@ -290,17 +318,25 @@ class FilterComponent extends Component {
         fullWidth={true}
         maxWidth="lg"
       >
+        {/* Title */}
         <DialogTitle id="form-dialog-title">
           Configurar Filtro {title}
         </DialogTitle>
+
+        {/* Content depends on type of data column */}
         <DialogContent>
           {content}
         </DialogContent>
+
+        {/* Buttons for finalizing/canceling filter configuration */}
         <DialogActions>
+          {/* Cancel button */}
           <Button onClick={() => this.handleCloseWindow('configureFilter')} color="primary">
             Cancelar
           </Button>
-          <Button onClick={() => this.handleConfigureFilter()} color="primary">
+
+          {/* Finish configuration button */}
+          <Button onClick={this.handleConfigureFilter} color="primary">
             Listo
           </Button>
         </DialogActions>
@@ -311,12 +347,15 @@ class FilterComponent extends Component {
   render() {
     const { classes } = this.props;
 
+    // Render filter configuration window with header bar (title and add/delete filter buttons)
+    // and filter list.
     return (
       <div className={classes.groupFilter}>
         <List className={classes.fullWidth} dense>
           {this.renderHeader()}
           {this.renderFilterList()}
         </List>
+        {/* Add popup windows for add-filter and configure-filter functionalities */}
         {this.renderAddFilterWindow()}
         {this.renderConfigureFilterWindow()}
       </div>

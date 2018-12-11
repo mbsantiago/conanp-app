@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import { withStyles } from '@material-ui/core/styles';
-
 import Select from 'react-select';
 
+// Material UI imports
+import { withStyles } from '@material-ui/core/styles';
 import Switch from '@material-ui/core/Switch';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
@@ -24,9 +24,8 @@ import InputLabel from '@material-ui/core/InputLabel';
 import FormControl from '@material-ui/core/FormControl';
 import TextField from '@material-ui/core/TextField';
 
-import './configurators.css';
 
-
+// Material UI styles
 const styles = theme => ({
   fullWidth: {
     width: "100%",
@@ -55,13 +54,21 @@ const styles = theme => ({
 
 
 class Configurator extends Component {
-  constructor(props) {
-    super(props);
 
-    this.state = {
-      newFilterWindowOpen: false,
-    };
+  state = {newFilterWindowOpen: false}
+
+  deleteFilter = (index) => {
+    let filters = this.props.filters.slice();
+    filters.splice(index, 1)
+    this.props.changeFilter(filters);
   }
+
+  handleAddFilter = () => {
+    this.addFilter();
+    this.setState({newFilterWindowOpen: false});
+  }
+
+  handleCloseWindow = () => this.setState({newFilterWindowOpen: false});
 
   renderHeader() {
     const { classes } = this.props;
@@ -74,7 +81,7 @@ class Configurator extends Component {
             control={
               <Switch
               checked={this.props.exclusion}
-              onChange={() => this.props.changeExclusion()}
+              onChange={this.props.changeExclusion}
               value="checkedA"
             />
             }
@@ -101,12 +108,6 @@ class Configurator extends Component {
         </FormGroup>
       </ListItem>
     );
-  }
-
-  deleteFilter(index) {
-    let filters = this.props.filters.slice();
-    filters.pop(index)
-    this.props.changeFilter(filters);
   }
 
   renderFilterList() {
@@ -141,23 +142,13 @@ class Configurator extends Component {
     );
   }
 
-  handleAddFilter() {
-    console.log(this.state);
-    this.addFilter();
-    this.setState({newFilterWindowOpen: false});
-  }
-
-  handleCloseWindow() {
-    this.setState({newFilterWindowOpen: false});
-  }
-
   renderAddFilterWindow() {
     const { classes } = this.props;
 
     return (
       <Dialog
         open={this.state.newFilterWindowOpen}
-        onClose={() => this.handleCloseWindow()}
+        onClose={this.handleCloseWindow}
         aria-labelledby="form-dialog-title"
         fullWidth={true}
         maxWidth="sm"
@@ -168,10 +159,10 @@ class Configurator extends Component {
           {this.renderNewFilterContent()}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => this.handleCloseWindow()} color="primary">
+          <Button onClick={this.handleCloseWindow} color="primary">
             Cancelar
           </Button>
-          <Button onClick={() => this.handleAddFilter()} color="primary">
+          <Button onClick={this.handleAddFilter} color="primary">
             Añadir
           </Button>
         </DialogActions>
@@ -311,6 +302,7 @@ class RangeConfigurator extends Configurator {
 
 CategoricalConfigurator = withStyles(styles, { withTheme: true})(CategoricalConfigurator)
 RangeConfigurator = withStyles(styles, { withTheme: true })(RangeConfigurator)
+
 
 export {
   CategoricalConfigurator,

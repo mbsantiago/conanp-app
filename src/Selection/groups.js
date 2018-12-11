@@ -13,7 +13,6 @@ import RemoveButton from '@material-ui/icons/Remove';
 import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
 import TextField from '@material-ui/core/TextField';
-
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -44,40 +43,32 @@ const styles = theme => ({
 
 
 class GroupSelection extends Component {
+  state = {dialogOpen: false, text: ''}
 
-  constructor(props) {
-    super(props);
+  handleCloseDialog = () => this.setState({dialogOpen: false})
 
-    this.state = {
-      dialogOpen: false,
-      text: ''
-    }
-
-  }
-
-  handleCloseDialog() {
-    this.setState({dialogOpen: false});
-  }
-
-  handleOpenDialog(group) {
+  handleOpenDialog = (group) => {
+    // Do when group is edited.
     this.props.selectGroup(group);
     this.setState({dialogOpen: true, text: ''});
   }
 
-  handleNameChange() {
+  handleNameChange = () => {
+    // Do when changing names is finished.
     this.props.changeGroupName(this.props.selectedGroup, this.state.text);
     this.setState({dialogOpen: false});
   }
 
   renderGroupList() {
-
     const { classes } = this.props;
 
-    let groupListObjects = [];
-
-    Object.entries(this.props.groups).forEach((item) => {
+    // Generate JSX elements for each group.
+    let groupListObjects = Object.entries(this.props.groups).map((item) => {
+      // Unpack name and info.
       let [group, info] = item;
-      let newJSXItem = (
+
+      // Create JSX List Item for group item.
+      return (
         <ListItem
           key={group}
           divider={true}
@@ -85,14 +76,21 @@ class GroupSelection extends Component {
           dense button
           onClick={() => this.props.selectGroup(group)}
         >
+          {/* Group name */}
           <ListItemText primary={`${info.name}`} />
+
+          {/* Buttons */}
           <ListItemSecondaryAction>
+
+            {/* Change name button */}
             <IconButton
               onClick={() => this.handleOpenDialog(group)}
               aria-label="Comments"
             >
               <CreateButton />
             </IconButton>
+
+            {/* Delete group button*/}
             <IconButton
               onClick={() => this.props.deleteGroup(group)}
               aria-label="Comments"
@@ -100,28 +98,29 @@ class GroupSelection extends Component {
               <RemoveButton />
             </IconButton>
           </ListItemSecondaryAction>
+
         </ListItem>
       );
-
-      groupListObjects.push(newJSXItem);
     });
 
     return (
-      <List className={classes.groupList}>
-        {groupListObjects}
-      </List>
+      <List className={classes.groupList}> {groupListObjects} </List>
     );
 
   }
 
   renderChangeNameDialog() {
+    // Render a pop-up window asking for name change
     return (
       <Dialog
         open={this.state.dialogOpen}
-        onClose={() => this.handleCloseDialog()}
+        onClose={this.handleCloseDialog}
         aria-labelledby="form-dialog-title"
       >
-        <DialogTitle id="form-dialog-title"></DialogTitle>
+        {/* Title */}
+        <DialogTitle id="form-dialog-title">Cambiar nombre</DialogTitle>
+
+        {/* Content. Text field for name changing. */}
         <DialogContent>
           <TextField
             autoFocus
@@ -133,32 +132,18 @@ class GroupSelection extends Component {
             fullWidth
           />
         </DialogContent>
+
+        {/* Buttons */}
         <DialogActions>
-          <Button onClick={() => this.handleCloseDialog()} color="primary">
+          <Button onClick={this.handleCloseDialog} color="primary">
             Cancelar
           </Button>
-          <Button onClick={() => this.handleNameChange()} color="primary">
+          <Button onClick={this.handleNameChange} color="primary">
             Cambiar
           </Button>
         </DialogActions>
+
       </Dialog>
-    );
-  }
-
-  renderAddGroupButton() {
-    const { classes } = this.props;
-
-    return (
-      <div className={classes.buttonContainer}>
-        <Button
-          variant="fab"
-          color="secondary"
-          aria-label="Add"
-          onClick={()=>this.props.newGroup()}
-          className={classes.button}>
-          <AddIcon />
-        </Button>
-      </div>
     );
   }
 
@@ -167,9 +152,14 @@ class GroupSelection extends Component {
 
     return (
       <div className={classes.groupSelection}>
+        {/* List component to create rows */}
         <List className={classes.fullWidth} dense>
+
+          {/* First row with subwindow title and add/delete group buttons*/}
           <ListItem>
             <ListItemText primary="Grupos" />
+
+            {/* Add new group button*/}
             <Button
               variant="text"
               color="primary"
@@ -179,6 +169,8 @@ class GroupSelection extends Component {
             >
               <AddIcon className={classes.extendedIcon}/>
             </Button>
+
+            {/* Delete all groups button */}
             <Button
               variant="text"
               color="secondary"
@@ -188,12 +180,18 @@ class GroupSelection extends Component {
             >
               <DeleteIcon className={classes.extendedIcon}/>
             </Button>
+
           </ListItem>
+
           <Divider/>
+
+          {/* New row for group list */}
           <ListItem>
             {this.renderGroupList()}
           </ListItem>
         </List>
+
+        {/* Pop up window for name changing */}
         {this.renderChangeNameDialog()}
       </div>
     );
@@ -201,4 +199,4 @@ class GroupSelection extends Component {
 
 }
 
-export default withStyles(styles, { withTheme: true})(GroupSelection);
+export default withStyles(styles, { withTheme: true })(GroupSelection);

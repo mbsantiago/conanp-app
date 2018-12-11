@@ -31,118 +31,117 @@ const styles = theme => ({
 
 class AppComponent extends Component {
 
-  constructor(props) {
-    super(props)
-
-    this.config = props.config;
-
-    this.state = {
-      expanded: false,
-    };
-
-  }
+  state = {expanded: false}
 
   renderContent() {
-
+    // Main interfase for class. Any child must implement
+    // this method. This will render in the components page.
     return null;
-
-  }
-
-  handleClickToggle() {
-    this.props.handleToggle();
-  }
-
-  handleClose() {
-    this.props.handleClose();
   }
 
   handleExpand() {
+    // Expand then component window to full width
     this.setState(state => ({ expanded: !state.expanded }));
   }
 
   getPaperStyle() {
-    let width = this.state.expanded ? '90vw' : this.config.contentWidth;
+    // Set window width. Max if expanded, otherwise configuration.
+    let width = this.state.expanded ?
+      '90vw':
+      this.props.config.contentWidth;
 
     return {
-      top: this.config.contentTop,
-      left: this.config.contentLeft,
+      zIndex: 1,
+      top: this.props.config.contentTop,
+      left: this.props.config.contentLeft,
       width: width,
     };
   }
 
-
   getButtonStyle() {
-    let style = {
-      top: this.config.top,
-    };
-    if (this.config.alignment === 'right') {
-      style['right'] = -10;
+    // Buttons can be placed on the right or left hand side of the
+    // window. This is set by the aligment option in the configuration.
+    let style = {top: this.props.top, zIndex: 0};
+    if (this.props.config.alignment === 'right') {
+      style['right'] = 0;
     } else {
-      style['left'] = -10;
+      style['left'] = 0;
     }
+
     return style;
   }
 
   renderContentContainer() {
+    // Early exit if component not open.
+    if (!this.props.open) return null;
 
     const { classes } = this.props;
-
     const paperStyle = this.getPaperStyle();
 
-    if (this.props.open) {
-      return (
-        <Fade in={true}>
-          <Paper
-            className={classes.content}
-            elevation={1}
-            style={paperStyle}
-          >
-            <AppBar position='static'>
-              <Toolbar>
-                <Typography variant="h6" color="inherit" className={classes.grow}>
-                  {this.config.name}
-                </Typography>
-                <Button
+    // Select icon for expansion/contraction button.
+    const expansionIcon = this.state.expanded ?
+      <FullscreenExitIcon color="inherit"/> :
+      <FullscreenIcon color="inherit"/>;
+
+    return (
+      <Fade in={true}>
+        <Paper
+          className={classes.content}
+          elevation={1}
+          style={paperStyle}
+        >
+          {/* Bar with title and nav buttons */}
+          <AppBar position='static'>
+            <Toolbar>
+              {/* Title */}
+              <Typography variant="h6" color="inherit" className={classes.grow}>
+                {this.props.name}
+              </Typography>
+
+              {/* Expand button */}
+              <Button
                 color="inherit"
                 onClick={() => this.handleExpand()}
                 autoFocus
-                >
-                  {this.state.expanded ? <FullscreenExitIcon color="inherit"/> : <FullscreenIcon color="inherit"/>}
-                </Button>
-                <Button
-                  color="inherit"
-                  onClick={() => this.handleClose()}
-                  autoFocus
-                >
-                  <ClearIcon color="inherit"/>
-                </Button>
-              </Toolbar>
-            </AppBar>
-            {this.renderContent()}
-          </Paper>
-        </Fade>
-      );
+              >
+                {expansionIcon}
+              </Button>
 
-    } else {
-      return null;
-    }
+              {/* Closing button */}
+              <Button
+                color="inherit"
+                onClick={() => this.props.handleClose()}
+                autoFocus
+              >
+                <ClearIcon color="inherit"/>
+              </Button>
+
+            </Toolbar>
+          </AppBar>
+
+          {/* Main content of component (Must be implemented by children classes) */}
+          {this.renderContent()}
+        </Paper>
+      </Fade>
+    );
   }
 
   render() {
     const { classes } = this.props;
 
-    const buttonStyle = this.getButtonStyle();
     return (
       <div>
+        {/* Button for opening/closing the component's window */}
         <Button
-          style={buttonStyle}
+          style={this.getButtonStyle()}
           variant="contained"
           color="primary"
           className={classes.button}
-          onClick={() => this.handleClickToggle()}
+          onClick={() => this.props.handleToggle()}
         >
-          {this.config.name}
+          {this.props.name}
         </Button>
+        {/* Components Content */}
         {this.renderContentContainer()}
       </div>
     );
