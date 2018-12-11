@@ -1,12 +1,10 @@
 import React, { createRef, Component } from 'react';
 import PropTypes from 'prop-types';
+
+// Map rendering imports
 import Control from 'react-leaflet-control';
 import { bbox, featureCollection, pointsWithinPolygon } from '@turf/turf';
 import 'leaflet/dist/leaflet.css';
-import IconButton from '@material-ui/core/IconButton';
-import HomeButton from '@material-ui/icons/Home';
-import { load } from '../utils';
-
 import {
   Map,
   Pane,
@@ -18,6 +16,13 @@ import {
   CircleMarker,
   Tooltip } from 'react-leaflet';
 
+
+// Material UI imports
+import IconButton from '@material-ui/core/IconButton';
+import HomeButton from '@material-ui/icons/Home';
+
+// Local imports
+import { load } from '../utils';
 import * as config from './conf';
 
 

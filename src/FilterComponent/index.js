@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
 // Material UI imports
 import { withStyles } from '@material-ui/core/styles';
@@ -112,14 +113,19 @@ class FilterComponent extends Component {
   }
 
   handleAddFilter = () => {
+    // Don't add filter if none selected or columns are still loading.
     if (this.state.column === '' || this.state.column === 'cargando') {
       return null;
     }
 
+    // Copy filters
     let filters = Object.assign({}, this.props.filters);
-    let newFilterName = uuidv4();
-    let type = Array.isArray(this.props.columnRanges[this.state.column]) ? 'categorical': 'range';
 
+    // Create new filter with random name.
+    let newFilterName = uuidv4();
+
+    // Add needed filter configuration info.
+    let type = Array.isArray(this.props.columnRanges[this.state.column]) ? 'categorical': 'range';
     filters[newFilterName] = {
       'column': this.state.column,
       'type': type,
@@ -127,7 +133,10 @@ class FilterComponent extends Component {
       'filters': [],
     };
 
+    // Pass the new filter to the change filter function
     this.props.changeFilters(filters);
+
+    // Close window, open configure filter window with newly created filter.
     this.setState({
       configureFilterWindowOpen: true,
       newFilterWindowOpen: false,
@@ -362,5 +371,16 @@ class FilterComponent extends Component {
     );
   }
 }
+
+
+// Enforcing prop types
+FilterComponent.propTypes = {
+  classes: PropTypes.object,
+  disabled: PropTypes.bool,
+  changeFilters: PropTypes.func.isRequired,
+  filters: PropTypes.object.isRequired,
+  columnRanges: PropTypes.object.isRequired,
+};
+
 
 export default withStyles(styles, { withTheme: true })(FilterComponent);

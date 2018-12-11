@@ -4,15 +4,9 @@ import { withStyles } from '@material-ui/core/styles';
 
 
 class GraphComponent extends AppComponent {
-
   renderContent() {
-
-    console.log('Graph');
-
     return <div> Graph </div>;
-
   }
-
 }
 
 

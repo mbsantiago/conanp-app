@@ -1,4 +1,7 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+
+// Select component with autocomplete
 import Select from 'react-select';
 
 // Material UI imports
@@ -58,12 +61,16 @@ class Configurator extends Component {
   state = {newFilterWindowOpen: false}
 
   deleteFilter = (index) => {
+    // Copy filter array and remove the corresponding element
     let filters = this.props.filters.slice();
     filters.splice(index, 1);
+
+    // Pass the resulting array to change filter function
     this.props.changeFilter(filters);
   }
 
   handleAddFilter = () => {
+    // Add filter and close window.
     this.addFilter();
     this.setState({newFilterWindowOpen: false});
   }
@@ -71,11 +78,17 @@ class Configurator extends Component {
   handleCloseWindow = () => this.setState({newFilterWindowOpen: false});
 
   renderHeader() {
+    // Render top bar with title and control buttons
     const { classes } = this.props;
 
+    // Generate a row with header info
     return (
       <ListItem>
+
+        {/* Title */}
         <ListItemText primary={this.header} />
+
+        {/* Switch to set if filter is inclusive or exclusive */}
         <FormGroup row>
           <FormControlLabel
             control={
@@ -87,6 +100,8 @@ class Configurator extends Component {
             }
             label={this.props.exclusion? 'exclusion': 'inclusion'}
           />
+
+          {/* Add new filter option button */}
           <Button
             variant="text"
             color="primary"
@@ -96,6 +111,8 @@ class Configurator extends Component {
           >
             <AddIcon className={classes.extendedIcon}/>
           </Button>
+
+          {/* Remove all filter options button */}
           <Button
             variant="text"
             color="secondary"
@@ -113,6 +130,7 @@ class Configurator extends Component {
   renderFilterList() {
     const { classes } = this.props;
 
+    // Generate JSX element for each filter option in filter configuration.
     let filters = this.props.filters.map((filter, i) => {
       return (
         <ListItem
@@ -120,7 +138,10 @@ class Configurator extends Component {
           divider={true}
           dense
         >
+          {/* Name of option (depends on type of filter) */}
           {this.renderFilterEntry(filter)}
+
+          {/* Remove filter option button */}
           <ListItemSecondaryAction>
             <IconButton
               onClick={() => this.deleteFilter(i)}
@@ -133,6 +154,7 @@ class Configurator extends Component {
       );
     });
 
+    // Render list with all filter options.
     return (
       <ListItem>
         <List className={classes.filterList}>
@@ -145,6 +167,7 @@ class Configurator extends Component {
   renderAddFilterWindow() {
     const { classes } = this.props;
 
+    // Render popup window to select new filter option
     return (
       <Dialog
         open={this.state.newFilterWindowOpen}
@@ -154,14 +177,23 @@ class Configurator extends Component {
         maxWidth="sm"
         classes={{paperScrollPaper: classes.root}}
       >
+        {/* Window title */}
         <DialogTitle id="form-dialog-title">Nuevo {this.header}</DialogTitle>
+
+        {/* Selection component (depends on type of filter) */}
         <DialogContent className={classes.root}>
           {this.renderNewFilterContent()}
         </DialogContent>
+
+        {/* Cancel or finalize adding filter option buttons */}
         <DialogActions>
+
+          {/* Cancel button */}
           <Button onClick={this.handleCloseWindow} color="primary">
             Cancelar
           </Button>
+
+          {/* Add new option button */}
           <Button onClick={this.handleAddFilter} color="primary">
             Añadir
           </Button>
@@ -174,49 +206,74 @@ class Configurator extends Component {
   render() {
     const { classes } = this.props;
 
+    // Render a list to create rows with header and filter option list.
     return (
       <div className={classes.fullWidth}>
         <List className={classes.fullWidth} dense>
           {this.renderHeader()}
-          {this.renderFilterList()}
           <Divider/>
-          {this.renderAddFilterWindow()}
+          {this.renderFilterList()}
         </List>
+        {/* Render popup window to add new filter option */}
+        {this.renderAddFilterWindow()}
       </div>
     );
   }
-
 }
+
+
+// Prop types validation
+Configurator.propTypes = {
+  filters: PropTypes.array.isRequired,
+  changeFilter: PropTypes.func.isRequired,
+  changeExclusion: PropTypes.func.isRequired,
+  classes: PropTypes.object,
+  exclusion: PropTypes.bool.isRequired,
+};
 
 
 
 class CategoricalConfigurator extends Configurator {
+  header = 'Valores';
+
   constructor(props) {
     super(props);
-    this.header = 'Valores';
+
+    // Add current text field value to state
     this.state['value'] = '';
   }
 
-  handleChange(option) {
-    this.setState({
-      value: option.value
-    });
+  handleChange = (option) => this.setState({value: option.value});
+
+  addFilter() {
+    // Copy filter array and add new filter option.
+    let filters = this.props.filters.slice();
+    filters.push(this.state.value);
+
+    // Pass the new filter array config to the change filter function.
+    this.props.changeFilter(filters);
   }
 
   renderNewFilterContent() {
     const { classes } = this.props;
 
+    // Prepare all possible values of categorical data field for rendering
+    // in Select component
     let options = this.props.values.map(name =>
       ({value: name, label: name}));
 
+    // Render a form to select a single option of all possible categorical values.
     return (
       <form className={classes.form} autoComplete="off">
         <FormControl className={classes.formControl + ' ' + classes.fullWidth}>
+          {/* Name of field */}
           <InputLabel htmlFor="value">Valor</InputLabel>
+
+          {/* Selection component, Dropdown menu with autocomplete option */}
           <Select
             value={{value: this.state.value, label: this.state.value}}
             name={"value"}
-            onChange={(option) => this.handleChange(option)}
+            onChange={this.handleChange}
             options={options}
           />
         </FormControl>
@@ -224,48 +281,47 @@ class CategoricalConfigurator extends Configurator {
     );
   }
 
-  addFilter() {
-    let filters = this.props.filters.slice();
-    filters.push(this.state.value);
-    this.props.changeFilter(filters);
-  }
-
   renderFilterEntry(filter) {
+    // Representation of filter option is just the value of categorical field.
     return <div>{filter}</div>;
   }
 }
 
 class RangeConfigurator extends Configurator {
+  header = 'Rangos';
+
   constructor(props) {
     super(props);
-    this.header = 'Rangos';
 
+    // Add current minimum and maximum values of new
+    // filter option to state of component.
     this.state['min'] = null;
     this.state['max'] = null;
   }
 
   addFilter() {
+    // Copy filter config array and add new option with new min-max values
+    // for continuous data field.
     let filters = this.props.filters.slice();
     filters.push({
       'min': this.state.min,
       'max': this.state.max,
     });
+
+    // Pass the new filter config array to change filter function.
     this.props.changeFilter(filters);
   }
 
-  handleChange(name) {
-    return event => {
-      this.setState({
-        [name]: event.target.value
-      });
-    };
-  }
+  handleChange = (name) => event => this.setState({[name]: event.target.value});
 
   renderNewFilterContent() {
     const { classes } = this.props;
 
+    // Render a form with two number fields to specify min and max values of
+    // continuous data field.
     return (
       <form className={classes.form} noValidate autoComplete="off">
+        {/* Number field for Minimum specification */}
         <TextField
           id="standard-number-2"
           label="De"
@@ -278,6 +334,8 @@ class RangeConfigurator extends Configurator {
           }}
           margin="normal"
         />
+
+        {/* Number field for maximum specification */}
         <TextField
           id="standard-number-2"
           label="A"
@@ -295,6 +353,7 @@ class RangeConfigurator extends Configurator {
   }
 
   renderFilterEntry(filter) {
+    // Representation of filter option is given by "min - max"
     return <div> {filter.min} - {filter.max} </div>;
   }
 }
