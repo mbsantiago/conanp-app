@@ -6,7 +6,7 @@ function load(url, callback) {
         // Return in json format
         return response.json();
       } else {
-        throw new Error('Error at loading ' + url);
+        throw Error(response.statusText + url);
       }
     })
     .then(data => {
@@ -123,8 +123,15 @@ function filterData(data, filters, mappings) {
 }
 
 
+function getDates(data){
+  let dates = new Set(data.map(datum => datum.date));
+  return dates;
+}
+
+
 export {
   load,
   uuidv4,
   filterData,
+  getDates,
 };

@@ -7,6 +7,9 @@ import AppBar from '@material-ui/core/AppBar';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 
+// Local imports
+import DateFilter from './DateFilter';
+
 
 class Filter extends Component {
   state = {value: 0, filters: {}}
@@ -20,7 +23,13 @@ class Filter extends Component {
   };
 
   renderDatePicker() {
-    return null;
+    return <DateFilter
+      dates={this.props.dates}
+      selectedMonths={this.props.selectedMonths}
+      unselectAllMonths={this.props.unselectAllMonths}
+      selectAllMonths={this.props.selectAllMonths}
+      toggleMonth={this.props.toggleMonth}
+    />;
   }
 
   renderFieldFilters() {
@@ -63,6 +72,11 @@ Filter.propTypes = {
   dataColumnRanges: PropTypes.object,
   dataFilters: PropTypes.object.isRequired,
   changeDataFilters: PropTypes.func.isRequired,
+  dates: PropTypes.object.isRequired,
+  selectedMonths: PropTypes.object.isRequired,
+  unselectAllMonths: PropTypes.func.isRequired,
+  selectAllMonths: PropTypes.func.isRequired,
+  toggleMonth: PropTypes.func.isRequired,
 };
 
 

@@ -3,6 +3,12 @@ import React, { Component } from 'react';
 // Material UI imports
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
+import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
 
 // Other imports
 import { ScaleLoader } from 'react-spinners';
@@ -21,7 +27,7 @@ import DisaggregationComponent from './Disaggregation';
 import GraphComponent from './Graph';
 
 // Local imports
-import { load, uuidv4, filterData } from './utils';
+import { load, uuidv4, filterData, getDates } from './utils';
 import * as config from './config';
 
 
@@ -31,6 +37,7 @@ const theme = createMuiTheme({
   typography: {
     useNextVariants: true,
   },
+  palette: config.PALETTE,
 });
 
 
@@ -43,15 +50,21 @@ class App extends Component {
     let [newGroup, newGroupInfo] = this.makeNewGroupInfo();
 
     this.state = {
+      // Groups info
       groups: newGroupInfo,
       selectedGroup: newGroup,
-      points: null,
+      // Loading status
       loading: false,
+      loadingError: false,
+      errorMsg: null,
+      // Point location, data and column info
+      points: null,
       pointColumnRanges: null,
       dataColumnRanges: null,
       dataMapping: null,
+      // Data filters, aggregators and disaggregators
       dataFilters: {},
-      selectedView: '',
+      // Current window size
       window: {width: 0, height: 0}
     };
 
@@ -61,16 +74,23 @@ class App extends Component {
     // Holder of point data.
     this.data = {};
 
+    // Holder of available dates for current selected group
+    this.dates = new Set();
+
     // Holder of filtered point data.
     this.filteredData = [];
   }
 
   componentDidMount() {
     // Load all important data asynchronously
-    load(config.POINTS_URL, (data) => this.setState({points: data}));
-    load(config.POINTS_COL_URL, (data) => this.setState({pointColumnRanges: data}));
-    load(config.DATA_COL_URL, (data) => this.setState({dataColumnRanges: data}));
-    load(config.DATA_MAPPING_URL, (data) => this.setState({dataMapping: data}));
+    load(config.POINTS_URL, (data) => this.setState({points: data}))
+      .catch((error) => this.setState({loadingError: true, errorMsg: `${error.name}:  ${error.message}`}));
+    load(config.POINTS_COL_URL, (data) => this.setState({pointColumnRanges: data}))
+      .catch((error) => this.setState({loadingError: true, errorMsg: `${error.name}:  ${error.message}`}));
+    load(config.DATA_COL_URL, (data) => this.setState({dataColumnRanges: data}))
+      .catch((error) => this.setState({loadingError: true, errorMsg: `${error.name}:  ${error.message}`}));
+    load(config.DATA_MAPPING_URL, (data) => this.setState({dataMapping: data}))
+      .catch((error) => this.setState({loadingError: true, errorMsg: `${error.name}:  ${error.message}`}));
 
     // Update on change of screen size
     this.updateWindowDimensions();
@@ -88,59 +108,10 @@ class App extends Component {
     });
   }
 
-  checkLoading() {
-    // Loading is done if loading queue (set) is empty. Change status if empty.
-    if (this.loadingPoints.size === 0) {
-      this.setState({loading: false});
-    }
-  }
-
-  addPoint = (ids) => {
-    // Check if manual selection in unabled. Exit early if it is.
-    let manualSelection = this.state.groups[this.state.selectedGroup].manualSelection;
-    if (!manualSelection) return null;
-
-    // Add any new points to loading queue.
-    let loading = this.loadDataFromPoints(ids);
-
-    // Change component state: Add points to selection and change loading status if needed.
-    this.setState(state => {
-      let selection = state.groups[state.selectedGroup].selection;
-      ids.forEach(id => selection.add(id));
-      state.loading = loading;
-      return state;
-    });
-  }
-
-  removePoint = (id) => {
-    this.setState(state => {
-      let selection = state.groups[state.selectedGroup].selection;
-      selection.delete(id);
-      return state;
-    });
-  }
-
-  changeGroupName(group, name) {
-    this.setState(state => {state.groups[group].name = name;});
-  }
-
-  deleteGroup(group) {
-    this.setState(state => {
-      // Do not remove a group if its the last one.
-      if (Object.keys(state.groups).length === 1) return state;
-
-      let groups = state.groups;
-      delete groups[group];
-
-      // If selected group was just deleted, change it.
-      if (group === state.selectedGroup) state.selectedGroup = Object.keys(state.groups)[0];
-
-      return state;
-    });
-  }
-
+  // ====== Point selection and data download ======
+  /* Load point data from list of points*/
   loadDataFromPoints(ids) {
-    let loading = false;
+    let loading = this.state.loading;
 
     // Check if the data of any new point is missing
     ids.forEach(id => {
@@ -160,11 +131,163 @@ class App extends Component {
 
             // Remove point id from loading set.
             this.loadingPoints.delete(id);
-          }).then(() => this.checkLoading());
+          })
+          .then(() => this.checkLoading())
+          .catch((error) => {
+            this.loadingPoints.delete(id);
+            console.log(error);
+          });
       }
     });
 
     return loading;
+  }
+
+  /* Helper function to check if all point data has been downloaded */
+  checkLoading() {
+    // Loading is done if loading queue (set) is empty. Change status if empty.
+    if (this.loadingPoints.size === 0) {
+      this.setState(state => {
+        const selection = state.groups[state.selectedGroup].selection;
+        this.updateDates(selection);
+        return {loading: false};
+      });
+    }
+  }
+
+  addPoint = (ids) => {
+    // Check if manual selection in unabled. Exit early if it is.
+    let manualSelection = this.state.groups[this.state.selectedGroup].manualSelection;
+    if (!manualSelection) return null;
+
+    // Add any new points to loading queue.
+    let loading = this.loadDataFromPoints(ids);
+
+    // Change component state: Add points to selection and change loading status if needed.
+    this.setState(state => {
+      let selection = state.groups[state.selectedGroup].selection;
+      ids.forEach(id => selection.add(id));
+
+      // Update dates if not loading
+      if (!loading) {
+        this.updateDates(selection);
+      }
+
+      state.loading = loading;
+      return state;
+    });
+  }
+
+  removePoint = (id) => {
+    this.setState(state => {
+      let selection = state.groups[state.selectedGroup].selection;
+      selection.delete(id);
+
+      // Update dates if not loading
+      if (!state.loading) {
+        this.updateDates(selection);
+      }
+
+      return state;
+    });
+  }
+
+  // ====== Group handling ======
+  changeSelectedGroup = (name) => {
+    this.setState(state => {
+      let selection = state.groups[name].selection;
+      // Update dates if not loading
+      if (!state.loading) {
+        this.updateDates(selection);
+      }
+
+      state.selectedGroup = name;
+      return state;
+    });
+  }
+
+  changeGroupName(group, name) {
+    this.setState(state => {
+      state.groups[group].name = name;
+    });
+  }
+
+  makeNewGroupInfo() {
+    // New random name
+    let newGroup = uuidv4();
+
+    // Group info consists of:
+    //    1. A Name
+    //    2. Selection set to store associated points.
+    //    3. A list of filters that define the associated points.
+    //    4. A boolean named manualSelection that selects which of the
+    //    two modes of operation is active (manual selection or point filtering)
+    //    5. A set of selected months to filter information with.
+    let newGroupInfo = {};
+    newGroupInfo[newGroup] = {
+      name: 'G-' + newGroup.slice(0, 4),
+      selection: new Set(),
+      manualSelection: true,
+      filters: {},
+      months: new Set(),
+    };
+
+    // Return name and group info
+    return [newGroup, newGroupInfo];
+  }
+
+  newGroup() {
+    this.setState(state => {
+      // Create new group and add to group info.
+      let [, newGroupInfo] = this.makeNewGroupInfo();
+      state.groups = Object.assign(state.groups, newGroupInfo);
+      return state;
+    });
+  }
+
+  deleteGroup(group) {
+    this.setState(state => {
+      // Do not remove a group if its the last one.
+      if (Object.keys(state.groups).length === 1) return state;
+
+      let groups = state.groups;
+      delete groups[group];
+
+      // If selected group was just deleted, change it.
+      if (group === state.selectedGroup) state.selectedGroup = Object.keys(state.groups)[0];
+
+      return state;
+    });
+  }
+
+  deleteAllGroups() {
+    this.setState(state => {
+      // Make new group
+      let [newGroup, newGroupInfo] = this.makeNewGroupInfo();
+
+      // Replace group info, and selected group with new.
+      state.groups = newGroupInfo;
+      state.selectedGroup = newGroup;
+      return state;
+    });
+  }
+
+  // ====== Group filter handling ======
+  changeManualSelection() {
+    this.setState(state => {
+      // Get manualSelection boolean option for selected group.
+      let groupInfo = state.groups[state.selectedGroup];
+      let newManualSelection = !groupInfo.manualSelection;
+
+      // Erase any selection if filtering mode is now activated
+      if (!newManualSelection) {
+        groupInfo.selection = new Set();
+      }
+
+      // Change manualSelection to its oposite.
+      groupInfo.manualSelection = newManualSelection;
+      return state;
+    });
   }
 
   changeFilters(group, filters) {
@@ -182,9 +305,9 @@ class App extends Component {
       state.loading = loading;
       return state;
     });
-
   }
 
+  // ====== Data filter handling ======
   changeDataFilters(filters) {
     // Filter data for all groups
     let filteredData = {};
@@ -207,69 +330,102 @@ class App extends Component {
 
     // Change state to update selected data filters
     this.setState({dataFilters: filters});
-    //console.log(this.filteredData);
   }
 
-  deleteAllGroups() {
+  // ====== Date filter handling ======
+  updateDates(selection) {
+    let data = [];
+    selection.forEach(id => {
+      if (id in this.data) {
+        data = data.concat(this.data[id]);
+      }});
+    this.dates = getDates(data);
+  }
+
+  toggleMonth = (month) => {
     this.setState(state => {
-      // Make new group
-      let [newGroup, newGroupInfo] = this.makeNewGroupInfo();
+      let selected = state.groups[state.selectedGroup].months;
 
-      // Replace group info, and selected group with new.
-      state.groups = newGroupInfo;
-      state.selectedGroup = newGroup;
-      return state;
-    });
-  }
-
-  makeNewGroupInfo() {
-    // New random name
-    let newGroup = uuidv4();
-
-    // Group info consists of:
-    //    1. A Name
-    //    2. Selection set to store associated points.
-    //    3. A list of filters that define the associated points.
-    //    4. A boolean named manualSelection that selects which of the
-    //    two modes of operation is active (manual selection or point filtering)
-    let newGroupInfo = {};
-    newGroupInfo[newGroup] = {
-      name: 'G-' + newGroup.slice(0, 4),
-      selection: new Set(),
-      manualSelection: true,
-      filters: {},
-    };
-
-    // Return name and group info
-    return [newGroup, newGroupInfo];
-  }
-
-  newGroup() {
-    this.setState(state => {
-      // Create new group and add to group info.
-      let [, newGroupInfo] = this.makeNewGroupInfo();
-      state.groups = Object.assign(state.groups, newGroupInfo);
-      return state;
-    });
-  }
-
-  changeManualSelection() {
-    this.setState(state => {
-      // Get manualSelection boolean option for selected group.
-      let groupInfo = state.groups[state.selectedGroup];
-      let newManualSelection = !groupInfo.manualSelection;
-
-      // Erase any selection if filtering mode is now activated
-      if (!newManualSelection) {
-        groupInfo.selection = new Set();
+      if (selected.has(month)) {
+        selected.delete(month);
+      } else {
+        selected.add(month);
       }
 
-      // Change manualSelection to its oposite.
-      groupInfo.manualSelection = newManualSelection;
       return state;
     });
   }
 
+  selectAllMonths = () => {
+    let months = new Set();
+    this.dates.forEach(date => {
+      let [year, month, ] = date.split('-');
+      months.add(`${year}-${month}`);
+    });
+
+    this.setState(state => {
+      let selected = state.groups[state.selectedGroup];
+      selected['months'] = months;
+      return selected;
+    });
+  }
+
+  unselectAllMonths = () => {
+    this.setState( state => {
+      state.groups[state.selectedGroup].months = new Set();
+      return state;
+    });
+  }
+
+
+  // ====== Loading Error Handlers ======
+  sendErrorReport = () => {
+    const email = config.MAINTAINER;
+    const subject = `Reporte de error aplicación ${config.NAME}`;
+    const body = `ERROR: ${this.state.errorMsg}`;
+    const msg = `mailto:${email}?subject=${subject}&body=${body}`;
+    window.open(msg);
+  }
+
+  renderErrorWindow() {
+    // Render popup window with error information and possible actions.
+    return (
+      <Dialog
+        open={this.state.loadingError}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Error al cargar"}</DialogTitle>
+        <DialogContent>
+          {/* Display informative text on error */}
+          <DialogContentText id="alert-dialog-description">
+            La aplicación no pudo cargar la información necesaria para desplegar la visualización.
+            Favor de recargar la ventana o, en caso de que persista el problema,
+            enviar un reporte a los mantenedores de esta aplicación.
+          </DialogContentText>
+          <br/>
+          {/* Display error message */}
+          <DialogContentText>
+            ERROR : {this.state.errorMsg}
+          </DialogContentText>
+        </DialogContent>
+
+        {/* Possible actions on error */}
+        <DialogActions>
+          {/* Reload window action button */}
+          <Button onClick={() => window.location.reload()} color="primary" autoFocus>
+            Recargar
+          </Button>
+          {/* Send report action button */}
+          <Button onClick={this.sendErrorReport} color="secondary">
+            Enviar reporte
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  }
+
+  // ====== Main Renderer ======
   render() {
     // Add loader if any point's data is being loading.
     let loader = null;
@@ -298,9 +454,6 @@ class App extends Component {
             selectedPoints={this.state.groups[this.state.selectedGroup].selection}
             addPoint={this.addPoint}
             removePoint={this.removePoint}
-            open={this.state.selectedView === 'Map'}
-            handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Map'? '': 'Map'}))}
-            handleClose={() => this.setState({selectedView: ''})}
           />
           <AppMenu
             height={this.state.window.height}
@@ -309,7 +462,7 @@ class App extends Component {
               key={'Seleccionar'}
               groups={this.state.groups}
               selectedGroup={this.state.selectedGroup}
-              selectGroup={(group) => this.setState({selectedGroup: group, manualSelection: true})}
+              selectGroup={this.changeSelectedGroup}
               changeGroupName={(group, name) => this.changeGroupName(group, name)}
               newGroup={() => this.newGroup()}
               deleteGroup={(group) => this.deleteGroup(group)}
@@ -317,36 +470,30 @@ class App extends Component {
               changeManualSelection={() => this.changeManualSelection()}
               pointColumnRanges={this.state.pointColumnRanges}
               changeFilters={(group, filters) => this.changeFilters(group, filters)}
-              open={this.state.selectedView === 'Selection'}
-              handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Selection'? '': 'Selection'}))}
-              handleClose={() => this.setState({selectedView: ''})}
             />
             <FilterComponent
               key={'Filtrar'}
               dataColumnRanges={this.state.dataColumnRanges}
               dataFilters={this.state.dataFilters}
               changeDataFilters={(filters) => this.changeDataFilters(filters)}
-              open={this.state.selectedView === 'Filter'}
-              handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Filter'? '': 'Filter'}))}
-              handleClose={() => this.setState({selectedView: ''})}
+              selectedMonths={this.state.groups[this.state.selectedGroup].months}
+              unselectAllMonths={this.unselectAllMonths}
+              selectAllMonths={this.selectAllMonths}
+              toggleMonth={this.toggleMonth}
+              dates={this.dates}
             />
             <AggregationComponent
               key={'Agregar'}
-              handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Aggregation'? '': 'Aggregation'}))}
-              handleClose={() => this.setState({selectedView: ''})}
             />
             <DisaggregationComponent
               key={'Desagregar'}
-              handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Disggregation'? '': 'Disggregation'}))}
-              handleClose={() => this.setState({selectedView: ''})}
             />
             <GraphComponent
               key={'Graficar'}
-              handleToggle={() => this.setState(state => ({selectedView: state.selectedView === 'Graph'? '': 'Graph'}))}
-              handleClose={() => this.setState({selectedView: ''})}
             />
           </AppMenu>
         </div>
+        {this.renderErrorWindow()}
       </MuiThemeProvider>
     );
   }

@@ -4,7 +4,7 @@ const POINT_NAME_COL = 'id_congl';
 const POINT_NAME = 'conglomerado';
 
 const SELECTED_POINT_COLOR = 'red';
-const UNSELECTED_POINT_COLOR = 'blue';
+const UNSELECTED_POINT_COLOR = '#439889';
 
 const POINT_WEIGHT = 1;
 const POINT_OPACITY = 0.8;

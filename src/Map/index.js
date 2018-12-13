@@ -100,20 +100,22 @@ class AppMap extends Component {
 
   onClickShape(feature) {
     // Build feature collection from points and store in component to avoid multiple calculation
-    if (!(this.pointsFeatureCollection)) {
-      this.pointsFeatureCollection = featureCollection(this.props.points.map(d => ({
-        type: 'Feature',
-        geometry: {type: 'Point', coordinates: [d[config.POINT_LON_COL], d[config.POINT_LAT_COL]]},
-        properties: {id: d[config.POINT_NAME_COL]},
-      })));
+    if (this.props.points) {
+      if (!(this.pointsFeatureCollection)) {
+        this.pointsFeatureCollection = featureCollection(this.props.points.map(d => ({
+          type: 'Feature',
+          geometry: {type: 'Point', coordinates: [d[config.POINT_LON_COL], d[config.POINT_LAT_COL]]},
+          properties: {id: d[config.POINT_NAME_COL]},
+        })));
+      }
+
+      // Extract IDS of points that fall within feature
+      let pointsInside = pointsWithinPolygon(this.pointsFeatureCollection, feature);
+      let ids = pointsInside.features.map(feat => feat.properties.id);
+
+      // Add to selection
+      this.props.addPoint(ids);
     }
-
-    // Extract IDS of points that fall within feature
-    let pointsInside = pointsWithinPolygon(this.pointsFeatureCollection, feature);
-    let ids = pointsInside.features.map(feat => feat.properties.id);
-
-    // Add to selection
-    this.props.addPoint(ids);
 
     // Focus on selected feature
     this.centerOnFeature(feature);
@@ -263,7 +265,7 @@ class AppMap extends Component {
 }
 
 
-// Enforcing prop types
+// Prop types validation
 AppMap.propTypes = {
   selectedPoints: PropTypes.object.isRequired,
   points: PropTypes.array,
