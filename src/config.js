@@ -10,6 +10,9 @@ const DATA_MAPPING_URL = BASE + 'metadata/mapeo_especie';
 const MAINTAINER = 'soporte.dgpi@conabio.gob.mx';
 const NAME = 'visualización-fototrampeo';
 
+const DATE_COL = 'fecha';
+const TIME_COL = 'hora';
+
 const PALETTE = {
   primary: {
     light: '#439889',
@@ -36,4 +39,6 @@ export {
   MAINTAINER,
   NAME,
   PALETTE,
+  DATE_COL,
+  TIME_COL,
 };

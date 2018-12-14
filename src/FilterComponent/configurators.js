@@ -11,7 +11,6 @@ import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
 import Button from '@material-ui/core/Button';
 import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
@@ -62,10 +61,23 @@ class Configurator extends Component {
 
   deleteFilter = (index) => {
     // Copy filter array and remove the corresponding element
-    let filters = this.props.filters.slice();
-    filters.splice(index, 1);
+    let filters = Object.assign({}, this.props.filters);
+    filters.filters.splice(index, 1);
 
     // Pass the resulting array to change filter function
+    this.props.changeFilter(filters);
+  }
+
+  changeExclusion = () => {
+    let filters = Object.assign({}, this.props.filters);
+    filters.exclusion = !filters.exclusion;
+
+    this.props.changeFilter(filters);
+  }
+
+  deleteAllFilters = () => {
+    let filters = Object.assign({}, this.props.filters);
+    filters.filters = [];
     this.props.changeFilter(filters);
   }
 
@@ -85,20 +97,17 @@ class Configurator extends Component {
     return (
       <ListItem>
 
-        {/* Title */}
-        <ListItemText primary={this.header} />
-
         {/* Switch to set if filter is inclusive or exclusive */}
         <FormGroup row>
           <FormControlLabel
             control={
               <Switch
-                checked={this.props.exclusion}
-                onChange={this.props.changeExclusion}
+                checked={this.props.filters.exclusion}
+                onChange={this.changeExclusion}
                 value="checkedA"
               />
             }
-            label={this.props.exclusion? 'exclusion': 'inclusion'}
+            label={this.props.filters.exclusion ? 'exclusion': 'inclusion'}
           />
 
           {/* Add new filter option button */}
@@ -118,7 +127,7 @@ class Configurator extends Component {
             color="secondary"
             aria-label="Delete"
             className={classes.button}
-            onClick={() => this.props.changeFilter([])}
+            onClick={this.deleteAllFilters}
           >
             <DeleteIcon className={classes.extendedIcon}/>
           </Button>
@@ -131,7 +140,7 @@ class Configurator extends Component {
     const { classes } = this.props;
 
     // Generate JSX element for each filter option in filter configuration.
-    let filters = this.props.filters.map((filter, i) => {
+    let filters = this.props.filters.filters.map((filter, i) => {
       return (
         <ListItem
           key={'filter-value-' + i}
@@ -224,18 +233,14 @@ class Configurator extends Component {
 
 // Prop types validation
 Configurator.propTypes = {
-  filters: PropTypes.array.isRequired,
+  filters: PropTypes.object.isRequired,
   changeFilter: PropTypes.func.isRequired,
-  changeExclusion: PropTypes.func.isRequired,
   classes: PropTypes.object,
-  exclusion: PropTypes.bool.isRequired,
 };
 
 
 
 class CategoricalConfigurator extends Configurator {
-  header = 'Valores';
-
   constructor(props) {
     super(props);
 
@@ -247,8 +252,8 @@ class CategoricalConfigurator extends Configurator {
 
   addFilter() {
     // Copy filter array and add new filter option.
-    let filters = this.props.filters.slice();
-    filters.push(this.state.value);
+    let filters = Object.assign({}, this.props.filters);
+    filters.filters.push(this.state.value);
 
     // Pass the new filter array config to the change filter function.
     this.props.changeFilter(filters);
@@ -288,22 +293,20 @@ class CategoricalConfigurator extends Configurator {
 }
 
 class RangeConfigurator extends Configurator {
-  header = 'Rangos';
-
   constructor(props) {
     super(props);
 
     // Add current minimum and maximum values of new
     // filter option to state of component.
-    this.state['min'] = null;
-    this.state['max'] = null;
+    this.state['min'] = props.values.min;
+    this.state['max'] = props.values.max;
   }
 
   addFilter() {
     // Copy filter config array and add new option with new min-max values
     // for continuous data field.
-    let filters = this.props.filters.slice();
-    filters.push({
+    let filters = Object.assign({}, this.props.filters);
+    filters.filters.push({
       'min': this.state.min,
       'max': this.state.max,
     });
@@ -327,7 +330,7 @@ class RangeConfigurator extends Configurator {
           label="De"
           value={this.state.min}
           onChange={this.handleChange('min')}
-          type="number"
+          type={this.props.filters.type}
           className={classes.input}
           InputLabelProps={{
             shrink: true,
@@ -341,7 +344,7 @@ class RangeConfigurator extends Configurator {
           label="A"
           value={this.state.max}
           onChange={this.handleChange('max')}
-          type="number"
+          type={this.props.filters.type}
           className={classes.input}
           InputLabelProps={{
             shrink: true,

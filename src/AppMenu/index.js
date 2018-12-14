@@ -52,7 +52,7 @@ class AppMenu extends Component {
     // Set window width. Max if expanded, otherwise 
     // use configuration default.
     let width = this.state.expanded ?
-      '90vw':
+      config.maxContentWidth:
       config.contentWidth;
 
     return {

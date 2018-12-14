@@ -1,3 +1,5 @@
+import * as config from './config';
+
 function load(url, callback) {
   // Async get data
   return fetch(url)
@@ -124,7 +126,7 @@ function filterData(data, filters, mappings) {
 
 
 function getDates(data){
-  let dates = new Set(data.map(datum => datum.date));
+  let dates = new Set(data.map(datum => datum[config.DATE_COL]));
   return dates;
 }
 

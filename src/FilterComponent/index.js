@@ -125,7 +125,7 @@ class FilterComponent extends Component {
     let newFilterName = uuidv4();
 
     // Add needed filter configuration info.
-    let type = Array.isArray(this.props.columnRanges[this.state.column]) ? 'categorical': 'range';
+    let type = Array.isArray(this.props.columnRanges[this.state.column]) ? 'categorical': 'number';
     filters[newFilterName] = {
       'column': this.state.column,
       'type': type,
@@ -153,7 +153,7 @@ class FilterComponent extends Component {
   changeFilter(config) {
     // Copy filter object and update the selected filter configurations.
     let filters = Object.assign({}, this.props.filters);
-    filters[this.state.selectedFilter].filters = config;
+    filters[this.state.selectedFilter] = config;
 
     // Pass the new filter configuration to the change filter function.
     this.props.changeFilters(filters);
@@ -292,10 +292,8 @@ class FilterComponent extends Component {
       content = (
         <CategoricalConfigurator
           values={columnInfo}
-          filters={filter.filters}
+          filters={filter}
           changeFilter={(config) => this.changeFilter(config)}
-          exclusion={filter.exclusion}
-          changeExclusion={() => this.changeExclusion()}
         />
       );
     } else {
@@ -303,10 +301,8 @@ class FilterComponent extends Component {
       content = (
         <RangeConfigurator
           values={columnInfo}
-          filters={filter.filters}
+          filters={filter}
           changeFilter={(config) => this.changeFilter(config)}
-          exclusion={filter.exclusion}
-          changeExclusion={() => this.changeExclusion()}
         />
       );
     }
@@ -373,7 +369,7 @@ class FilterComponent extends Component {
 }
 
 
-// Enforcing prop types
+// Prop types validation
 FilterComponent.propTypes = {
   classes: PropTypes.object,
   disabled: PropTypes.bool,

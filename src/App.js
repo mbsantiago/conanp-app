@@ -150,6 +150,7 @@ class App extends Component {
       this.setState(state => {
         const selection = state.groups[state.selectedGroup].selection;
         this.updateDates(selection);
+        this.updateFilteredData(state);
         return {loading: false};
       });
     }
@@ -223,6 +224,7 @@ class App extends Component {
     //    4. A boolean named manualSelection that selects which of the
     //    two modes of operation is active (manual selection or point filtering)
     //    5. A set of selected months to filter information with.
+    //    6. An array of time filters.
     let newGroupInfo = {};
     newGroupInfo[newGroup] = {
       name: 'G-' + newGroup.slice(0, 4),
@@ -230,6 +232,12 @@ class App extends Component {
       manualSelection: true,
       filters: {},
       months: new Set(),
+      timeFilters: {
+        type: 'time',
+        column: config.TIME_COL,
+        filters: [],
+        exclusion: false,
+      },
     };
 
     // Return name and group info
@@ -307,29 +315,111 @@ class App extends Component {
     });
   }
 
-  // ====== Data filter handling ======
-  changeDataFilters(filters) {
+  // ====== Filtering data ======
+  updateFilteredData(state) {
     // Filter data for all groups
     let filteredData = {};
 
     // Filter data for each group
-    for (let group in this.state.groups) {
+    for (let group in state.groups) {
       // Extract selected points.
-      let selection = this.state.groups[group].selection;
+      let selection = state.groups[group].selection;
 
       // Collect all data from each selected point.
       let data = [];
-      selection.forEach((id) => { data = data.concat(this.data[id]); });
+      selection.forEach((id) => {if(id in this.data) data = data.concat(this.data[id]); });
 
-      // Filter selected data
-      filteredData[group] = filterData(data, filters, this.state.dataMapping);
+      // Filter selected data with column filters
+      let filters = state.dataFilters;
+      let groupData = filterData(data, filters, state.dataMapping);
+
+      // Filter data with date and time filters
+      let months = this.state.groups[group].months;
+      let timeFilters = this.state.groups[group].timeFilters;
+
+      // Do not filter if no filters are found
+      if (months.size === 0 && timeFilters.filters.lenght === 0) {
+        filteredData[group] = groupData;
+      } else {
+
+        // Create a filter function for date filters
+        let dateFilter;
+        if (months.size === 0) {
+          // Trivial filter function if no date filters are found
+          dateFilter = () => true;
+        } else {
+          // Filter datum if falls within selected months
+          dateFilter = (datum) => {
+            let [year, month, ] = datum[config.DATE_COL].split('-');
+            let date = `${year}-${month}`;
+            return months.has(date);
+          };
+        }
+
+        // Create a filter function for time filters
+        let timeFilter;
+        if (timeFilters.filters.length === 0) {
+          // Trivial filter function if no time filters are found
+          timeFilter = () => true;
+        } else {
+          // Filter datum if it falls in the range of selected filters
+          let timeFilterFunc = (datum) => {
+            // Parse date column
+            let [hour, minute, ] = datum[config.TIME_COL].split(':');
+            let time = new Date(2000, 0, 0, hour, minute);
+            let minTime = new Date(2000, 0, 0, 0, 0);
+            let maxTime = new Date(2000, 0, 0, 0, 0);
+
+            // Check if time indicated falls within the selected time intervals
+            let isIn = false;
+            for (let i=0; i < timeFilters.filters.length; i++) {
+              // Parse time filters
+              let {min, max} = timeFilters.filters[i];
+              let [minHour, minMin] = min.split(':');
+              let [maxHour, maxMin] = max.split(':');
+
+              // Use Date objects for comparison
+              minTime.setHours(minHour);
+              minTime.setMinutes(minMin);
+              maxTime.setHours(maxHour);
+              maxTime.setMinutes(maxMin);
+
+              // Check if it falls in the selected time interval
+              if ((minTime <= time) && (time <= maxTime)) {
+                isIn = true;
+                break;
+              }
+            }
+
+            return isIn;
+          };
+
+          // Modify the filter function if time filter is exclusive
+          if (timeFilters.exclusion) {
+            timeFilter = (datum) => !timeFilterFunc(datum);
+          } else {
+            timeFilter = timeFilterFunc;
+          }
+        }
+
+        // Filter all data with time and date filters.
+        filteredData[group] = groupData
+          .filter(datum => timeFilter(datum) && dateFilter(datum));
+      }
     }
 
     // Store filtered data to avoid recalculation on each render.
     this.filteredData = filteredData;
+  }
 
+  // ====== Data filter handling ======
+  changeDataFilters(filters) {
     // Change state to update selected data filters
-    this.setState({dataFilters: filters});
+    this.setState(state => {
+      state.dataFilters = filters;
+      this.updateFilteredData(state);
+      return state;
+    });
   }
 
   // ====== Date filter handling ======
@@ -352,6 +442,8 @@ class App extends Component {
         selected.add(month);
       }
 
+      this.updateFilteredData(state);
+
       return state;
     });
   }
@@ -366,6 +458,8 @@ class App extends Component {
     this.setState(state => {
       let selected = state.groups[state.selectedGroup];
       selected['months'] = months;
+
+      this.updateFilteredData(state);
       return selected;
     });
   }
@@ -373,10 +467,21 @@ class App extends Component {
   unselectAllMonths = () => {
     this.setState( state => {
       state.groups[state.selectedGroup].months = new Set();
+
+      this.updateFilteredData(state);
       return state;
     });
   }
 
+  // ====== Time filtering handlers ======
+  changeTimeFilters = (filters) => {
+    this.setState(state => {
+      state.groups[state.selectedGroup].timeFilters = filters;
+
+      this.updateFilteredData(state);
+      return state;
+    });
+  }
 
   // ====== Loading Error Handlers ======
   sendErrorReport = () => {
@@ -481,6 +586,8 @@ class App extends Component {
               selectAllMonths={this.selectAllMonths}
               toggleMonth={this.toggleMonth}
               dates={this.dates}
+              changeTimeFilters={this.changeTimeFilters}
+              timeFilters={this.state.groups[this.state.selectedGroup].timeFilters}
             />
             <AggregationComponent
               key={'Agregar'}

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 // Material UI imports
+import { withStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import Divider from '@material-ui/core/Divider';
@@ -29,31 +30,58 @@ const MONTHS = {
 };
 
 
+const styles = theme => ({
+  root: {
+    ...theme.mixins.gutters(),
+    paddingTop: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing.unit * 2,
+    display: 'flex',
+    height: "100%",
+    width: "100%",
+  },
+  fullWidth: {
+    width: "100%",
+  },
+  button: {
+    margin: theme.spacing.unit,
+  },
+  extendedIcon: {
+    marginRight: theme.spacing.unit,
+  },
+  filterList: {
+    overflow: 'auto',
+    maxHeight: '35vh',
+    width: '100%',
+  }
+});
+
+
 class DateFilter extends Component {
   renderHeader() {
+    const { classes } = this.props;
     return (
       <>
-        <ListItemText
-          primary={'Meses disponibles'}
-        />
+        <ListItemText primary='Meses disponibles'/>
         {/* Add all months button */}
         <Button
           variant="text"
           color="primary"
           aria-label="Add"
+          className={classes.button}
           onClick={this.props.selectAllMonths}
         >
-          <LibraryAddIcon/>
+          <LibraryAddIcon className={classes.extendedIcon}/>
         </Button>
 
-        {/* Remove all monts button */}
+        {/* Remove all months button */}
         <Button
           variant="text"
           color="secondary"
           aria-label="Delete"
+          className={classes.button}
           onClick={this.props.unselectAllMonths}
         >
-          <DeleteIcon/>
+          <DeleteIcon className={classes.extendedIcon}/>
         </Button>
       </>
     );
@@ -96,17 +124,20 @@ class DateFilter extends Component {
       rows.push(subsection);
     });
 
+    const { classes } = this.props;
     return (
-      <List style={{width: '100%', overflow: 'auto', maxHeight: '40vh'}} dense>
+      <List className={classes.filterList} dense>
         {rows}
       </List>
     );
   }
 
   render() {
+    const { classes } = this.props;
+
     return (
-      <div>
-        <List>
+      <div className={classes.root}>
+        <List className={classes.fullWidth}>
           <ListItem>
             {this.renderHeader()}
           </ListItem>
@@ -128,7 +159,8 @@ DateFilter.propTypes = {
   toggleMonth: PropTypes.func.isRequired,
   selectedMonths: PropTypes.object.isRequired,
   dates: PropTypes.object.isRequired,
+  classes: PropTypes.object,
 };
 
 
-export default DateFilter;
+export default withStyles(styles, { withTheme: true })(DateFilter);
