@@ -13,24 +13,8 @@ const NAME = 'visualización-fototrampeo';
 const DATE_COL = 'fecha';
 const TIME_COL = 'hora';
 
-const PALETTE = {
-  primary: {
-    light: '#439889',
-    main: '#00695c',
-    dark: '#003d33',
-    contrastText: '#fff',
-  },
-  secondary: {
-    light: '#d7ffd9',
-    main: '#a5d6a7',
-    dark: '#75a478',
-    contrastText: '#000',
-  },
-};
-
 
 export {
-  BASE,
   POINTS_URL,
   POINTS_COL_URL,
   DATA_URL,
@@ -38,7 +22,6 @@ export {
   DATA_MAPPING_URL,
   MAINTAINER,
   NAME,
-  PALETTE,
   DATE_COL,
   TIME_COL,
 };

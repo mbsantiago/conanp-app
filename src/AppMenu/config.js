@@ -1,4 +1,4 @@
-const contentWidth = '30vw';
+const contentWidth = '40vw';
 const maxContentWidth = '80vw';
 const contentTop = '5vh';
 const contentLeft =  '10vw';

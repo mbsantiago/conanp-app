@@ -13,6 +13,9 @@ import Button from '@material-ui/core/Button';
 import LibraryAddIcon from '@material-ui/icons/LibraryAdd';
 import DeleteIcon from '@material-ui/icons/Delete';
 
+// Local imports
+import { styles } from '../theme';
+
 
 const MONTHS = {
   1: 'Enero',
@@ -28,32 +31,6 @@ const MONTHS = {
   11: 'Noviembre',
   12: 'Diciembre',
 };
-
-
-const styles = theme => ({
-  root: {
-    ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    display: 'flex',
-    height: "100%",
-    width: "100%",
-  },
-  fullWidth: {
-    width: "100%",
-  },
-  button: {
-    margin: theme.spacing.unit,
-  },
-  extendedIcon: {
-    marginRight: theme.spacing.unit,
-  },
-  filterList: {
-    overflow: 'auto',
-    maxHeight: '35vh',
-    width: '100%',
-  }
-});
 
 
 class DateFilter extends Component {
@@ -126,7 +103,7 @@ class DateFilter extends Component {
 
     const { classes } = this.props;
     return (
-      <List className={classes.filterList} dense>
+      <List className={classes.list} dense>
         {rows}
       </List>
     );

@@ -28,17 +28,8 @@ import GraphComponent from './Graph';
 
 // Local imports
 import { load, uuidv4, filterData, getDates } from './utils';
+import { theme } from './theme';
 import * as config from './config';
-
-
-// Material UI theme
-// Mainly here to address typography deprecation issues
-const theme = createMuiTheme({
-  typography: {
-    useNextVariants: true,
-  },
-  palette: config.PALETTE,
-});
 
 
 class App extends Component {
@@ -549,6 +540,8 @@ class App extends Component {
       );
     }
 
+    const columns = Object.assign({}, this.state.dataColumnRanges, this.state.pointColumnRanges);
+
     return (
       <MuiThemeProvider theme={theme}>
         <div className="App">
@@ -591,6 +584,7 @@ class App extends Component {
             />
             <AggregationComponent
               key={'Agregar'}
+              columns={columns}
             />
             <DisaggregationComponent
               key={'Desagregar'}

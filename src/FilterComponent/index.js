@@ -27,32 +27,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 // Local imports
 import { uuidv4 } from '../utils';
 import { CategoricalConfigurator, RangeConfigurator } from './configurators';
-
-// Material UI styles
-const styles = theme => ({
-  groupFilter: {
-    ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    display: 'flex',
-    height: "100%",
-    width: "100%",
-  },
-  fullWidth: {
-    width: "100%",
-  },
-  button: {
-    margin: theme.spacing.unit,
-  },
-  extendedIcon: {
-    marginRight: theme.spacing.unit,
-  },
-  filterList: {
-    overflow: 'auto',
-    maxHeight: '35vh',
-    width: '100%',
-  }
-});
+import { styles } from '../theme';
 
 
 class FilterComponent extends Component {
@@ -211,7 +186,7 @@ class FilterComponent extends Component {
     // Return the full list of filters
     return (
       <ListItem>
-        <List className={classes.filterList}>
+        <List className={classes.list}>
           {filters}
         </List>
       </ListItem>
@@ -248,7 +223,7 @@ class FilterComponent extends Component {
         <DialogContent>
           {/* Add a form with a dropdown menu with all possible columns */}
           <form className={classes.form} autoComplete="off">
-            <FormControl className={classes.formControl + ' ' + classes.fullWidth}>
+            <FormControl className={classes.fullWidth}>
               <InputLabel htmlFor="column">Columna</InputLabel>
               <Select
                 value={this.state.column}
@@ -355,7 +330,7 @@ class FilterComponent extends Component {
     // Render filter configuration window with header bar (title and add/delete filter buttons)
     // and filter list.
     return (
-      <div className={classes.groupFilter}>
+      <div className={classes.root}>
         <List className={classes.fullWidth} dense>
           {this.renderHeader()}
           {this.renderFilterList()}

@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
 
+// Material UI imports
+import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -19,28 +20,8 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 
-
-const styles = theme => ({
-  groupList: {
-    overflow: 'auto',
-    maxHeight: '35vh',
-    width: '100%',
-  },
-  fullWidth: {
-    width: "100%",
-  },
-  groupSelection: {
-    ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    display: 'flex',
-    height: "100%",
-  },
-  buttonContainer: {
-    margin: 'auto',
-    height: '100%',
-  }
-});
+// Local imports
+import { styles } from '../theme';
 
 
 class GroupSelection extends Component {
@@ -105,7 +86,7 @@ class GroupSelection extends Component {
     });
 
     return (
-      <List className={classes.groupList}> {groupListObjects} </List>
+      <List className={classes.list}> {groupListObjects} </List>
     );
 
   }
@@ -152,7 +133,7 @@ class GroupSelection extends Component {
     const { classes } = this.props;
 
     return (
-      <div className={classes.groupSelection}>
+      <div className={classes.root}>
         {/* List component to create rows */}
         <List className={classes.fullWidth} dense>
 

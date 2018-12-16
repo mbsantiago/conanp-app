@@ -27,32 +27,8 @@ import FormControl from '@material-ui/core/FormControl';
 import TextField from '@material-ui/core/TextField';
 
 
-// Material UI styles
-const styles = theme => ({
-  fullWidth: {
-    width: "100%",
-  },
-  button: {
-    margin: theme.spacing.unit,
-  },
-  extendedIcon: {
-    marginRight: theme.spacing.unit,
-  },
-  filterList: {
-    width: '100%',
-  },
-  form: {
-    display: 'flex',
-    flexGrow: 1,
-    width: '100%'
-  },
-  input: {
-    margin: theme.spacing.unit,
-  },
-  root: {
-    overflow: 'visible'
-  }
-});
+// Local imports
+import { styles } from '../theme';
 
 
 class Configurator extends Component {
@@ -166,7 +142,7 @@ class Configurator extends Component {
     // Render list with all filter options.
     return (
       <ListItem>
-        <List className={classes.filterList}>
+        <List className={classes.list}>
           {filters}
         </List>
       </ListItem>
@@ -184,13 +160,13 @@ class Configurator extends Component {
         aria-labelledby="form-dialog-title"
         fullWidth={true}
         maxWidth="sm"
-        classes={{paperScrollPaper: classes.root}}
+        classes={{paperScrollPaper: classes.overflow}}
       >
         {/* Window title */}
         <DialogTitle id="form-dialog-title">Nuevo {this.header}</DialogTitle>
 
         {/* Selection component (depends on type of filter) */}
-        <DialogContent className={classes.root}>
+        <DialogContent className={classes.overflow}>
           {this.renderNewFilterContent()}
         </DialogContent>
 
@@ -270,7 +246,7 @@ class CategoricalConfigurator extends Configurator {
     // Render a form to select a single option of all possible categorical values.
     return (
       <form className={classes.form} autoComplete="off">
-        <FormControl className={classes.formControl + ' ' + classes.fullWidth}>
+        <FormControl className={classes.fullWidth}>
           {/* Name of field */}
           <InputLabel htmlFor="value">Valor</InputLabel>
 

@@ -11,18 +11,7 @@ import Tab from '@material-ui/core/Tab';
 // Local imports
 import DateFilter from './DateFilter';
 import { RangeConfigurator } from '../FilterComponent/configurators';
-
-
-const styles = theme => ({
-  root: {
-    ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    display: 'flex',
-    height: "100%",
-    width: "100%",
-  },
-});
+import { styles } from '../theme';
 
 
 class Filter extends Component {
@@ -30,10 +19,6 @@ class Filter extends Component {
 
   handleChange = (event, value) => {
     this.setState({ value: value });
-  };
-
-  handleChangeIndex = index => {
-    this.setState({ value: index });
   };
 
   renderDatePicker() {
