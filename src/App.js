@@ -489,6 +489,7 @@ class App extends Component {
               key={'Graficar'}
               getFilteredData={this.getFilteredData}
               getGroupedData={this.getGroupedData}
+              groupInfo={this.state.groups}
             />
           </AppMenu>
         </div>

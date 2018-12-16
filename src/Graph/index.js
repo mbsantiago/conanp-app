@@ -39,9 +39,9 @@ class GraphComponent extends Component {
 
   async processData() {
     this.setState({loading: true, filtering: true}, async () => {
-      this.filterData().then((data) => {
+      this.filterData().then(async (data) => {
         this.setState({filtering: false, grouping: true}, async () => {
-          this.groupData(data).then(groupedData => {
+          this.groupData(data).then(async groupedData => {
             this.setState({grouping: false, loading: false}, () => {
               this.graphData = groupedData;
             });
@@ -63,21 +63,27 @@ class GraphComponent extends Component {
     this.setState({ menu: event.currentTarget });
   };
 
-  selectGraph = (index) => this.setState({selectedGraph: index});
+  selectGraph = (index) => this.setState({selectedGraph: index, menu: null});
 
   renderMenu() {
     return Graphs.map((graph, index) => (
       <MenuItem
         onClick={() => this.selectGraph(index)}
-        key={`Graph-${graph}`}
+        key={`Graph-${graph.name}`}
       >
-        {graph}
+        {graph.name}
       </MenuItem>
     ));
   }
 
   renderGraph() {
-    return <div> Gráfica </div>;
+    if (this.state.selectedGraph !== null) {
+      return React.createElement(
+        Graphs[this.state.selectedGraph],
+        {data: this.graphData});
+    } else {
+     return <div> Favor de seleccionar una gráfica </div>;
+    }
   }
 
   renderLoadingBar() {
@@ -118,6 +124,7 @@ class GraphComponent extends Component {
 
   render() {
     const { classes } = this.props;
+    const name = this.state.selectedGraph ? Graphs[this.state.selectedGraph].name : '';
     return (
       <div className={classes.flewGrow}>
         <AppBar position="static" color="default">
@@ -138,7 +145,7 @@ class GraphComponent extends Component {
               {this.renderMenu()}
             </Menu>
             <Typography>
-              {Graphs[this.state.selectedGraph]}
+              {name}
             </Typography>
             <Button
               variant="text"
