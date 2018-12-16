@@ -125,9 +125,193 @@ function filterData(data, filters, mappings) {
 }
 
 
-function getDates(data){
+function filterDataByDateTime(data, timeFilters, months) {
+  // Do not filter if no filters are found
+  if (months.size === 0 && timeFilters.filters.lenght === 0) return data;
+
+  // Create a filter function for date filters
+  let dateFilter;
+  if (months.size === 0) {
+    // Trivial filter function if no date filters are found
+    dateFilter = () => true;
+  } else {
+    // Filter datum if falls within selected months
+    dateFilter = (datum) => {
+      let [year, month, ] = datum[config.DATE_COL].split('-');
+      let date = `${year}-${month}`;
+      return months.has(date);
+    };
+  }
+
+  // Create a filter function for time filters
+  let timeFilter;
+  if (timeFilters.filters.length === 0) {
+    // Trivial filter function if no time filters are found
+    timeFilter = () => true;
+  } else {
+    // Filter datum if it falls in the range of selected filters
+    let timeFilterFunc = (datum) => {
+      // Parse date column
+      let [hour, minute, ] = datum[config.TIME_COL].split(':');
+      let time = new Date(2000, 0, 0, hour, minute);
+      let minTime = new Date(2000, 0, 0, 0, 0);
+      let maxTime = new Date(2000, 0, 0, 0, 0);
+
+      // Check if time indicated falls within the selected time intervals
+      let isIn = false;
+      for (let i=0; i < timeFilters.filters.length; i++) {
+        // Parse time filters
+        let {min, max} = timeFilters.filters[i];
+        let [minHour, minMin] = min.split(':');
+        let [maxHour, maxMin] = max.split(':');
+
+        // Use Date objects for comparison
+        minTime.setHours(minHour);
+        minTime.setMinutes(minMin);
+        maxTime.setHours(maxHour);
+        maxTime.setMinutes(maxMin);
+
+        // Check if it falls in the selected time interval
+        if ((minTime <= time) && (time <= maxTime)) {
+          isIn = true;
+          break;
+        }
+      }
+
+      return isIn;
+    };
+
+    // Modify the filter function if time filter is exclusive
+    if (timeFilters.exclusion) {
+      timeFilter = (datum) => !timeFilterFunc(datum);
+    } else {
+      timeFilter = timeFilterFunc;
+    }
+  }
+
+  return data.filter(datum => timeFilter(datum) && dateFilter(datum));
+}
+
+
+function getDates(data) {
   let dates = new Set(data.map(datum => datum[config.DATE_COL]));
   return dates;
+}
+
+
+function groupData(data, disaggregators, aggregators, mappings) {
+
+  let groupedData = {};
+  let aggCols = aggregators.columns;
+  let disCols = disaggregators.columns;
+  let aggTmp = aggregators.temporal;
+  let disTmp = disaggregators.temporal;
+
+  data.forEach(datum => {
+    let [year, month, day] = datum[config.DATE_COL].split('-');
+    let hour = datum[config.TIME_COL].split(':')[0];
+
+    let disGroupList = [];
+    let aggGroupList = [];
+    let disGroup = {};
+    let aggGroup = {};
+
+    if (disTmp.year) {
+      disGroupList.push(year);
+      disGroup['year'] = year;
+    }
+    if (disTmp.month) {
+      disGroupList.push(month);
+      disGroup['month'] = month;
+    }
+    if (disTmp.day) {
+      disGroupList.push(day);
+      disGroup['day'] = day;
+    }
+    if (disTmp.hour) {
+      disGroupList.push(hour);
+      disGroup['hour'] = hour;
+    }
+
+    if (aggTmp.year || disTmp.year) {
+      aggGroupList.push(year);
+      aggGroup['year'] = year;
+    }
+    if (aggTmp.month || disTmp.month) {
+      aggGroupList.push(month);
+      aggGroup['month'] = month;
+    }
+    if (aggTmp.day || disTmp.day) {
+      aggGroupList.push(day);
+      aggGroup['day'] = day;
+    }
+    if (aggTmp.hour || disTmp.hour) {
+      aggGroupList.push(hour);
+      aggGroup['hour'] = hour;
+    }
+
+    for (let i=0; i < disCols.length; i++) {
+      let column = disCols[i];
+      let value;
+
+      if (column in mappings.columns) {
+        let colVal = datum[mappings.columns[column]];
+
+        if (!(colVal in mappings.mapping)) {
+          value = colVal;
+        } else {
+          value = mappings.mapping[colVal][column];
+        }
+      } else {
+        value = datum[column];
+      }
+
+      disGroupList.push(value);
+      aggGroupList.push(value);
+
+      disGroup[column] = value;
+      aggGroup[column] = value;
+    }
+
+    for (let i=0; i < aggCols.length; i++) {
+      let column = aggCols[i];
+      let value;
+      if (column in mappings.columns) {
+        let colVal = datum[mappings.columns[column]];
+
+        if (!(colVal in mappings.mapping)) {
+          value = colVal;
+        } else {
+          value = mappings.mapping[colVal][column];
+        }
+      } else {
+        value = datum[column];
+      }
+
+      aggGroupList.push(value);
+      aggGroup[column] = value;
+    }
+
+    let aggGroupKey = aggGroupList.join(' ');
+    let disGroupKey = disGroupList.join(' ');
+
+    if (!(disGroup in groupedData)) {
+      groupedData[disGroupKey] = {
+        values: {},
+        keys: disGroup,
+      };
+    }
+    if (!(aggGroup in groupedData[disGroupKey].values)) {
+      groupedData[disGroupKey].values[aggGroupKey] = {
+        values: [],
+        keys: aggGroup,
+      };
+    }
+
+    groupedData[disGroupKey].values[aggGroupKey].values.push(datum[config.VALUE_COL]);
+  });
+
+  return groupedData;
 }
 
 
@@ -135,5 +319,7 @@ export {
   load,
   uuidv4,
   filterData,
+  filterDataByDateTime,
   getDates,
+  groupData,
 };

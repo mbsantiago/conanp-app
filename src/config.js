@@ -12,6 +12,7 @@ const NAME = 'visualización-fototrampeo';
 
 const DATE_COL = 'fecha';
 const TIME_COL = 'hora';
+const VALUE_COL = 'value';
 
 
 export {
@@ -24,4 +25,5 @@ export {
   NAME,
   DATE_COL,
   TIME_COL,
+  VALUE_COL,
 };

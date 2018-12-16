@@ -34,7 +34,34 @@ const MONTHS = {
 
 
 class DateFilter extends Component {
-  renderHeader() {
+  selectAllMonths = (dates) => {
+    let months = new Set();
+
+    for (let date of dates) {
+      let [year, month, ] = date.split('-');
+      months.add(`${year}-${month}`);
+    }
+
+    this.props.changeDateFilters(months);
+  }
+
+  unselectAllMonths = () => {
+    this.props.changeDateFilters(new Set());
+  }
+
+  toggleMonth = (month) => {
+    let months = new Set(this.props.dateFilters);
+
+    if (months.has(month)) {
+      months.delete(month);
+    } else {
+      months.add(month);
+    }
+
+    this.props.changeDateFilters(months);
+  }
+
+  renderHeader(dates) {
     const { classes } = this.props;
     return (
       <>
@@ -45,7 +72,7 @@ class DateFilter extends Component {
           color="primary"
           aria-label="Add"
           className={classes.button}
-          onClick={this.props.selectAllMonths}
+          onClick={() => this.selectAllMonths(dates)}
         >
           <LibraryAddIcon className={classes.extendedIcon}/>
         </Button>
@@ -56,7 +83,7 @@ class DateFilter extends Component {
           color="secondary"
           aria-label="Delete"
           className={classes.button}
-          onClick={this.props.unselectAllMonths}
+          onClick={this.unselectAllMonths}
         >
           <DeleteIcon className={classes.extendedIcon}/>
         </Button>
@@ -64,9 +91,10 @@ class DateFilter extends Component {
     );
   }
 
-  renderMonthList() {
+  renderMonthList(dates) {
     const availableDates = {};
-    this.props.dates.forEach(date => {
+
+    dates.forEach(date => {
       let [year, month, ] = date.split('-');
       if (!(year in availableDates)) availableDates[year] = new Set();
       availableDates[year].add(month);
@@ -84,8 +112,8 @@ class DateFilter extends Component {
         <ListItem key={`${year}-${month}`} divider={true}>
           <ListItemText primary={MONTHS[month]} />
           <Checkbox
-            onChange={() => this.props.toggleMonth(`${year}-${month}`)}
-            checked={this.props.selectedMonths.has(`${year}-${month}`)}
+            onChange={() => this.toggleMonth(`${year}-${month}`)}
+            checked={this.props.dateFilters.has(`${year}-${month}`)}
           />
         </ListItem>
       ));
@@ -111,16 +139,17 @@ class DateFilter extends Component {
 
   render() {
     const { classes } = this.props;
+    const dates = this.props.getDates();
 
     return (
       <div className={classes.root}>
         <List className={classes.fullWidth}>
           <ListItem>
-            {this.renderHeader()}
+            {this.renderHeader(dates)}
           </ListItem>
           <Divider/>
           <ListItem>
-            {this.renderMonthList()}
+            {this.renderMonthList(dates)}
           </ListItem>
         </List>
       </div>
@@ -131,11 +160,9 @@ class DateFilter extends Component {
 
 // Prop types validation
 DateFilter.propTypes = {
-  selectAllMonths: PropTypes.func.isRequired,
-  unselectAllMonths: PropTypes.func.isRequired,
-  toggleMonth: PropTypes.func.isRequired,
-  selectedMonths: PropTypes.object.isRequired,
-  dates: PropTypes.object.isRequired,
+  changeDateFilters: PropTypes.func.isRequired,
+  dateFilters: PropTypes.object.isRequired,
+  getDates: PropTypes.func.isRequired,
   classes: PropTypes.object,
 };
 

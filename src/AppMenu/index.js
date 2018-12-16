@@ -38,9 +38,10 @@ class AppMenu extends Component {
   state = {expanded: false, selectedChildren: null}
 
   selectChildren(index) {
-    this.setState(state => ({
-      selectedChildren: state.selectedChildren === index ? null: index
-    }));
+    this.setState(state => {
+      state.selectedChildren = state.selectedChildren === index ? null: index;
+      return state;
+    });
   }
 
   handleExpand() {
@@ -185,6 +186,7 @@ AppMenu.propTypes = {
   classes: PropTypes.object,
   height: PropTypes.number.isRequired,
   children: PropTypes.array.isRequired,
+  updates: PropTypes.object,
 };
 
 

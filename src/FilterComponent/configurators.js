@@ -75,16 +75,19 @@ class Configurator extends Component {
 
         {/* Switch to set if filter is inclusive or exclusive */}
         <FormGroup row>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={this.props.filters.exclusion}
-                onChange={this.changeExclusion}
-                value="checkedA"
-              />
-            }
-            label={this.props.filters.exclusion ? 'exclusion': 'inclusion'}
-          />
+          {
+            (!this.props.withoutExclusion) &&
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={this.props.filters.exclusion}
+                  onChange={this.changeExclusion}
+                  value="checkedA"
+                />
+              }
+              label={this.props.filters.exclusion ? 'exclusion': 'inclusion'}
+            />
+          }
 
           {/* Add new filter option button */}
           <Button
@@ -115,12 +118,15 @@ class Configurator extends Component {
   renderFilterList() {
     const { classes } = this.props;
 
+    const disabledFunc = this.props.disabledFunc ? this.props.disabledFunc : () => false;
+
     // Generate JSX element for each filter option in filter configuration.
     let filters = this.props.filters.filters.map((filter, i) => {
       return (
         <ListItem
           key={'filter-value-' + i}
           divider={true}
+          disabled={disabledFunc(filter)}
           dense
         >
           {/* Name of option (depends on type of filter) */}
@@ -131,6 +137,7 @@ class Configurator extends Component {
             <IconButton
               onClick={() => this.deleteFilter(i)}
               aria-label="Delete"
+              disabled={disabledFunc(filter)}
             >
               <RemoveButton/>
             </IconButton>
@@ -211,6 +218,7 @@ class Configurator extends Component {
 Configurator.propTypes = {
   filters: PropTypes.object.isRequired,
   changeFilter: PropTypes.func.isRequired,
+  disabledFunc: PropTypes.func,
   classes: PropTypes.object,
 };
 

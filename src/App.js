@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 // Material UI imports
-import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
+import { MuiThemeProvider } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -27,7 +27,7 @@ import DisaggregationComponent from './Disaggregation';
 import GraphComponent from './Graph';
 
 // Local imports
-import { load, uuidv4, filterData, getDates } from './utils';
+import * as utils from './utils';
 import { theme } from './theme';
 import * as config from './config';
 
@@ -55,6 +55,14 @@ class App extends Component {
       dataMapping: null,
       // Data filters, aggregators and disaggregators
       dataFilters: {},
+      aggregators: {
+        temporal: {year: false, month: false, day: false, hour: false},
+        columns: []
+      },
+      disaggregators: {
+        temporal: {year: false, month: false, day: false, hour: false},
+        columns: []
+      },
       // Current window size
       window: {width: 0, height: 0}
     };
@@ -74,13 +82,13 @@ class App extends Component {
 
   componentDidMount() {
     // Load all important data asynchronously
-    load(config.POINTS_URL, (data) => this.setState({points: data}))
+    utils.load(config.POINTS_URL, (data) => this.setState({points: data}))
       .catch((error) => this.setState({loadingError: true, errorMsg: `${error.name}:  ${error.message}`}));
-    load(config.POINTS_COL_URL, (data) => this.setState({pointColumnRanges: data}))
+    utils.load(config.POINTS_COL_URL, (data) => this.setState({pointColumnRanges: data}))
       .catch((error) => this.setState({loadingError: true, errorMsg: `${error.name}:  ${error.message}`}));
-    load(config.DATA_COL_URL, (data) => this.setState({dataColumnRanges: data}))
+    utils.load(config.DATA_COL_URL, (data) => this.setState({dataColumnRanges: data}))
       .catch((error) => this.setState({loadingError: true, errorMsg: `${error.name}:  ${error.message}`}));
-    load(config.DATA_MAPPING_URL, (data) => this.setState({dataMapping: data}))
+    utils.load(config.DATA_MAPPING_URL, (data) => this.setState({dataMapping: data}))
       .catch((error) => this.setState({loadingError: true, errorMsg: `${error.name}:  ${error.message}`}));
 
     // Update on change of screen size
@@ -114,7 +122,7 @@ class App extends Component {
 
         // Make an async request of point info
         // Check if queue is empty after loading.
-        load(
+        utils.load(
           config.DATA_URL + '?id=' + id,
           (data) => {
             // Add loaded data to the data object with the point's id as key.
@@ -138,12 +146,7 @@ class App extends Component {
   checkLoading() {
     // Loading is done if loading queue (set) is empty. Change status if empty.
     if (this.loadingPoints.size === 0) {
-      this.setState(state => {
-        const selection = state.groups[state.selectedGroup].selection;
-        this.updateDates(selection);
-        this.updateFilteredData(state);
-        return {loading: false};
-      });
+      this.setState({loading: false});
     }
   }
 
@@ -160,43 +163,23 @@ class App extends Component {
       let selection = state.groups[state.selectedGroup].selection;
       ids.forEach(id => selection.add(id));
 
-      // Update dates if not loading
-      if (!loading) {
-        this.updateDates(selection);
-      }
-
       state.loading = loading;
       return state;
     });
   }
 
   removePoint = (id) => {
+    if (!(this.state.groups[this.state.selectedGroup].manualSelection)) return null;
     this.setState(state => {
       let selection = state.groups[state.selectedGroup].selection;
       selection.delete(id);
-
-      // Update dates if not loading
-      if (!state.loading) {
-        this.updateDates(selection);
-      }
 
       return state;
     });
   }
 
   // ====== Group handling ======
-  changeSelectedGroup = (name) => {
-    this.setState(state => {
-      let selection = state.groups[name].selection;
-      // Update dates if not loading
-      if (!state.loading) {
-        this.updateDates(selection);
-      }
-
-      state.selectedGroup = name;
-      return state;
-    });
-  }
+  changeSelectedGroup = (name) => this.setState({selectedGroup: name});
 
   changeGroupName(group, name) {
     this.setState(state => {
@@ -206,7 +189,7 @@ class App extends Component {
 
   makeNewGroupInfo() {
     // New random name
-    let newGroup = uuidv4();
+    let newGroup = utils.uuidv4();
 
     // Group info consists of:
     //    1. A Name
@@ -291,7 +274,7 @@ class App extends Component {
 
   changeFilters(group, filters) {
     // Filter points using filter. Extract the id of the filtered points.
-    let selection = filterData(this.state.points, filters).map(point => point['id_congl']);
+    let selection = utils.filterData(this.state.points, filters).map(point => point['id_congl']);
 
     // Add any new points to loading queue.
     let loading = this.loadDataFromPoints(selection);
@@ -307,169 +290,78 @@ class App extends Component {
   }
 
   // ====== Filtering data ======
-  updateFilteredData(state) {
+  getFilteredData = () => {
     // Filter data for all groups
     let filteredData = {};
 
     // Filter data for each group
-    for (let group in state.groups) {
+    for (let group in this.state.groups) {
       // Extract selected points.
-      let selection = state.groups[group].selection;
+      let selection = this.state.groups[group].selection;
 
       // Collect all data from each selected point.
       let data = [];
       selection.forEach((id) => {if(id in this.data) data = data.concat(this.data[id]); });
 
       // Filter selected data with column filters
-      let filters = state.dataFilters;
-      let groupData = filterData(data, filters, state.dataMapping);
+      let filters = this.state.dataFilters;
+      let groupData = utils.filterData(data, filters, this.state.dataMapping);
 
       // Filter data with date and time filters
       let months = this.state.groups[group].months;
       let timeFilters = this.state.groups[group].timeFilters;
 
-      // Do not filter if no filters are found
-      if (months.size === 0 && timeFilters.filters.lenght === 0) {
-        filteredData[group] = groupData;
-      } else {
-
-        // Create a filter function for date filters
-        let dateFilter;
-        if (months.size === 0) {
-          // Trivial filter function if no date filters are found
-          dateFilter = () => true;
-        } else {
-          // Filter datum if falls within selected months
-          dateFilter = (datum) => {
-            let [year, month, ] = datum[config.DATE_COL].split('-');
-            let date = `${year}-${month}`;
-            return months.has(date);
-          };
-        }
-
-        // Create a filter function for time filters
-        let timeFilter;
-        if (timeFilters.filters.length === 0) {
-          // Trivial filter function if no time filters are found
-          timeFilter = () => true;
-        } else {
-          // Filter datum if it falls in the range of selected filters
-          let timeFilterFunc = (datum) => {
-            // Parse date column
-            let [hour, minute, ] = datum[config.TIME_COL].split(':');
-            let time = new Date(2000, 0, 0, hour, minute);
-            let minTime = new Date(2000, 0, 0, 0, 0);
-            let maxTime = new Date(2000, 0, 0, 0, 0);
-
-            // Check if time indicated falls within the selected time intervals
-            let isIn = false;
-            for (let i=0; i < timeFilters.filters.length; i++) {
-              // Parse time filters
-              let {min, max} = timeFilters.filters[i];
-              let [minHour, minMin] = min.split(':');
-              let [maxHour, maxMin] = max.split(':');
-
-              // Use Date objects for comparison
-              minTime.setHours(minHour);
-              minTime.setMinutes(minMin);
-              maxTime.setHours(maxHour);
-              maxTime.setMinutes(maxMin);
-
-              // Check if it falls in the selected time interval
-              if ((minTime <= time) && (time <= maxTime)) {
-                isIn = true;
-                break;
-              }
-            }
-
-            return isIn;
-          };
-
-          // Modify the filter function if time filter is exclusive
-          if (timeFilters.exclusion) {
-            timeFilter = (datum) => !timeFilterFunc(datum);
-          } else {
-            timeFilter = timeFilterFunc;
-          }
-        }
-
-        // Filter all data with time and date filters.
-        filteredData[group] = groupData
-          .filter(datum => timeFilter(datum) && dateFilter(datum));
-      }
+      filteredData[group] = utils.filterDataByDateTime(groupData, timeFilters, months);
     }
 
-    // Store filtered data to avoid recalculation on each render.
-    this.filteredData = filteredData;
+    return filteredData;
+  }
+
+  // ====== Grouping data ======
+  getGroupedData = (data) => {
+    let groupedData = {};
+    const aggregators = this.state.aggregators;
+    const disaggregators = this.state.disaggregators;
+    const mapping = this.state.dataMapping;
+
+    for (let group in data) {
+      groupedData[group] = utils.groupData(data[group], disaggregators, aggregators, mapping);
+    }
+
+    return groupedData;
   }
 
   // ====== Data filter handling ======
-  changeDataFilters(filters) {
+  changeDataFilters = (filters) => {
     // Change state to update selected data filters
     this.setState(state => {
       state.dataFilters = filters;
-      this.updateFilteredData(state);
       return state;
     });
   }
 
   // ====== Date filter handling ======
-  updateDates(selection) {
+  changeDateFilters = (months) => {
+    this.setState(state => {
+      state.groups[state.selectedGroup].months = months;
+      return state;
+    });
+  }
+
+  getSelectionDates = () => {
+    const selection = this.state.groups[this.state.selectedGroup].selection;
     let data = [];
     selection.forEach(id => {
       if (id in this.data) {
         data = data.concat(this.data[id]);
       }});
-    this.dates = getDates(data);
-  }
-
-  toggleMonth = (month) => {
-    this.setState(state => {
-      let selected = state.groups[state.selectedGroup].months;
-
-      if (selected.has(month)) {
-        selected.delete(month);
-      } else {
-        selected.add(month);
-      }
-
-      this.updateFilteredData(state);
-
-      return state;
-    });
-  }
-
-  selectAllMonths = () => {
-    let months = new Set();
-    this.dates.forEach(date => {
-      let [year, month, ] = date.split('-');
-      months.add(`${year}-${month}`);
-    });
-
-    this.setState(state => {
-      let selected = state.groups[state.selectedGroup];
-      selected['months'] = months;
-
-      this.updateFilteredData(state);
-      return selected;
-    });
-  }
-
-  unselectAllMonths = () => {
-    this.setState( state => {
-      state.groups[state.selectedGroup].months = new Set();
-
-      this.updateFilteredData(state);
-      return state;
-    });
+    return utils.getDates(data);
   }
 
   // ====== Time filtering handlers ======
   changeTimeFilters = (filters) => {
     this.setState(state => {
       state.groups[state.selectedGroup].timeFilters = filters;
-
-      this.updateFilteredData(state);
       return state;
     });
   }
@@ -540,7 +432,7 @@ class App extends Component {
       );
     }
 
-    const columns = Object.assign({}, this.state.dataColumnRanges, this.state.pointColumnRanges);
+    const columns = this.state.dataColumnRanges;
 
     return (
       <MuiThemeProvider theme={theme}>
@@ -572,25 +464,31 @@ class App extends Component {
             <FilterComponent
               key={'Filtrar'}
               dataColumnRanges={this.state.dataColumnRanges}
+              getDates={this.getSelectionDates}
               dataFilters={this.state.dataFilters}
-              changeDataFilters={(filters) => this.changeDataFilters(filters)}
-              selectedMonths={this.state.groups[this.state.selectedGroup].months}
-              unselectAllMonths={this.unselectAllMonths}
-              selectAllMonths={this.selectAllMonths}
-              toggleMonth={this.toggleMonth}
-              dates={this.dates}
-              changeTimeFilters={this.changeTimeFilters}
               timeFilters={this.state.groups[this.state.selectedGroup].timeFilters}
+              dateFilters={this.state.groups[this.state.selectedGroup].months}
+              changeDataFilters={this.changeDataFilters}
+              changeDateFilters={this.changeDateFilters}
+              changeTimeFilters={this.changeTimeFilters}
+            />
+            <DisaggregationComponent
+              key={'Desagregar'}
+              columns={columns}
+              disaggregators={this.state.disaggregators}
+              changeDisaggregators={(agg) => this.setState({disaggregators: agg})}
             />
             <AggregationComponent
               key={'Agregar'}
               columns={columns}
-            />
-            <DisaggregationComponent
-              key={'Desagregar'}
+              aggregators={this.state.aggregators}
+              disaggregators={this.state.disaggregators}
+              changeAggregators={(agg) => this.setState({aggregators: agg})}
             />
             <GraphComponent
               key={'Graficar'}
+              getFilteredData={this.getFilteredData}
+              getGroupedData={this.getGroupedData}
             />
           </AppMenu>
         </div>

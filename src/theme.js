@@ -57,7 +57,13 @@ const styles = theme => ({
     margin: theme.spacing.unit,
   },
   overflow: {overflow: 'visible'},
-})
+  formControl: {
+    margin: theme.spacing.unit * 3,
+  },
+  flexGrow: {
+    flexGrow: 1,
+  },
+});
 
 
 export { theme, styles };

@@ -24,11 +24,9 @@ class Filter extends Component {
   renderDatePicker() {
     return (
       <DateFilter
-        dates={this.props.dates}
-        selectedMonths={this.props.selectedMonths}
-        unselectAllMonths={this.props.unselectAllMonths}
-        selectAllMonths={this.props.selectAllMonths}
-        toggleMonth={this.props.toggleMonth}
+        dateFilters={this.props.dateFilters}
+        changeDateFilters={this.props.changeDateFilters}
+        getDates={this.props.getDates}
       />
     );
   }
@@ -88,15 +86,13 @@ class Filter extends Component {
 Filter.propTypes = {
   dataColumnRanges: PropTypes.object,
   dataFilters: PropTypes.object.isRequired,
-  changeDataFilters: PropTypes.func.isRequired,
-  dates: PropTypes.object.isRequired,
-  selectedMonths: PropTypes.object.isRequired,
-  unselectAllMonths: PropTypes.func.isRequired,
-  selectAllMonths: PropTypes.func.isRequired,
-  toggleMonth: PropTypes.func.isRequired,
-  classes: PropTypes.object,
-  changeTimeFilters: PropTypes.func.isRequired,
   timeFilters: PropTypes.object.isRequired,
+  dateFilters: PropTypes.object.isRequired,
+  changeDataFilters: PropTypes.func.isRequired,
+  changeDateFilters: PropTypes.func.isRequired,
+  changeTimeFilters: PropTypes.func.isRequired,
+  getDates: PropTypes.func.isRequired,
+  classes: PropTypes.object,
 };
 
 
