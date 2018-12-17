@@ -1,8 +1,10 @@
-import ActivityPlot from './ActivityPlot';
+import ActivityBoxPlot from './ActivityBoxPlot';
+import ActivityBarPlot from './ActivityBarPlot';
 
 
 const Graphs = [
-  ActivityPlot,
+  ActivityBoxPlot,
+  ActivityBarPlot,
 ];
 
 

@@ -22,7 +22,7 @@ import Graphs from './Graphs';
 
 class GraphComponent extends Component {
   state = {
-    selectedGraph: null,
+    selectedGraph: 0,
     menu: null,
     loading: true,
     filtering: true,
@@ -69,21 +69,17 @@ class GraphComponent extends Component {
     return Graphs.map((graph, index) => (
       <MenuItem
         onClick={() => this.selectGraph(index)}
-        key={`Graph-${graph.name}`}
+        key={`Graph-${graph.plotName}`}
       >
-        {graph.name}
+        {graph.plotName}
       </MenuItem>
     ));
   }
 
   renderGraph() {
-    if (this.state.selectedGraph !== null) {
-      return React.createElement(
-        Graphs[this.state.selectedGraph],
-        {data: this.graphData});
-    } else {
-     return <div> Favor de seleccionar una gráfica </div>;
-    }
+    return React.createElement(
+      Graphs[this.state.selectedGraph],
+      {data: this.graphData, groupInfo: this.props.groupInfo});
   }
 
   renderLoadingBar() {
@@ -124,7 +120,7 @@ class GraphComponent extends Component {
 
   render() {
     const { classes } = this.props;
-    const name = this.state.selectedGraph ? Graphs[this.state.selectedGraph].name : '';
+    const name = Graphs[this.state.selectedGraph].plotName;
     return (
       <div className={classes.flewGrow}>
         <AppBar position="static" color="default">
@@ -144,7 +140,7 @@ class GraphComponent extends Component {
             >
               {this.renderMenu()}
             </Menu>
-            <Typography>
+            <Typography variant='h6'>
               {name}
             </Typography>
             <Button
@@ -158,7 +154,7 @@ class GraphComponent extends Component {
             </Button>
           </Toolbar>
         </AppBar>
-        <div className={classes.root}>
+        <div className={classes.graph}>
           {this.renderContent()}
         </div>
       </div>

@@ -200,7 +200,6 @@ function getDates(data) {
 
 
 function groupData(data, disaggregators, aggregators, mappings) {
-
   let groupedData = {};
   let aggCols = aggregators.columns;
   let disCols = disaggregators.columns;
@@ -250,6 +249,7 @@ function groupData(data, disaggregators, aggregators, mappings) {
       aggGroup['hour'] = hour;
     }
 
+    var error = false;
     for (let i=0; i < disCols.length; i++) {
       let column = disCols[i];
       let value;
@@ -258,7 +258,8 @@ function groupData(data, disaggregators, aggregators, mappings) {
         let colVal = datum[mappings.columns[column]];
 
         if (!(colVal in mappings.mapping)) {
-          value = colVal;
+          error = true;
+          break;
         } else {
           value = mappings.mapping[colVal][column];
         }
@@ -280,7 +281,8 @@ function groupData(data, disaggregators, aggregators, mappings) {
         let colVal = datum[mappings.columns[column]];
 
         if (!(colVal in mappings.mapping)) {
-          value = colVal;
+          error = true;
+          break;
         } else {
           value = mappings.mapping[colVal][column];
         }
@@ -292,16 +294,19 @@ function groupData(data, disaggregators, aggregators, mappings) {
       aggGroup[column] = value;
     }
 
+    if (error) return null;
+
     let aggGroupKey = aggGroupList.join(' ');
     let disGroupKey = disGroupList.join(' ');
 
-    if (!(disGroup in groupedData)) {
+    if (!(disGroupKey in groupedData)) {
       groupedData[disGroupKey] = {
         values: {},
         keys: disGroup,
       };
     }
-    if (!(aggGroup in groupedData[disGroupKey].values)) {
+
+    if (!(aggGroupKey in groupedData[disGroupKey].values)) {
       groupedData[disGroupKey].values[aggGroupKey] = {
         values: [],
         keys: aggGroup,

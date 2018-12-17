@@ -63,6 +63,14 @@ const styles = theme => ({
   flexGrow: {
     flexGrow: 1,
   },
+  graph: {
+    ...theme.mixins.gutters(),
+    paddingTop: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing.unit * 2,
+    display: 'flex',
+    height: "70vh",
+    width: "100%",
+  },
 });
 
 
